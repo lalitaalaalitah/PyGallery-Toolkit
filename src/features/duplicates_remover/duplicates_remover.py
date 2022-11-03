@@ -70,6 +70,8 @@ def duplicates_remover(
     threshold = 1 - similarity / 100
     diff_limit = int(threshold * (hash_size**2))
 
+    print()
+
     for i, file1 in enumerate(files_and_hashes):
 
         duplicates: list[str] = []
