@@ -77,7 +77,7 @@ python main.py --input_path='input' --output_path='output' --fix_datetaken="alwa
 
 Feel free to improve and optimize the existing code. To contribute to the project, read the previous points carefully and do the next steps with the project:
 
-1. Fork it (<https://github.com/yourname/yourproject/fork>)
+1. Fork it (<https://github.com/enrique-lozano/Image-organizer/fork>)
 2. Create your feature branch (`git checkout -b feature/newFeature`)
 3. Commit your changes (`git commit -am 'Add some newFeature'`)
 4. Push to the branch (`git push origin feature/newFeature`)
