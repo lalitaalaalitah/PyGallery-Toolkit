@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 ## Usage example 💡
 
-If the installation was successful, you are ready to start! To do this, paste some images into a new directory inside the project. That is, for example, create a folder called <code>input</code> in the root directory of the cloned project, and paste some files in .jpg / .jpeg. Then enter the following command:
+If the installation was successful, you are ready to start! To do it, paste some images into a new directory inside the project. That is, for example, create a folder called <code>input</code> in the root directory of the cloned project, and paste some files in .jpg / .jpeg. Then enter the following command:
 
 ```
 python main.py --input_path='input' --output_path='output'
