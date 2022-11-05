@@ -71,7 +71,7 @@ python main.py --input_path='input' --output_path='output' --fix_datetaken="alwa
 
 ## Issues 🤕
 
-- Creation date modification based on filename is not working correctly, making some files to not be organized correctly
+- Creation date modification based on filename is not working correctly, making some files to not be organized correctly (<a href="https://github.com/enrique-lozano/Image-organizer/issues/1#issue-1437213445">more info</a>)
 
 ## Want to collaborate? 🙋🏻
 
