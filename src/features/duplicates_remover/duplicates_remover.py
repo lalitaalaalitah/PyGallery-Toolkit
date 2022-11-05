@@ -16,9 +16,7 @@ def duplicates_remover(
 ):
     """Optionally find and remove duplicate images"""
 
-    hashes = {}
     duplicates_imgs: list[tuple[list[str], float]] = []
-    similar_imgs: list[list[str]] = []
 
     files_and_hashes: list[tuple[str, ImageHash]] = []
 
@@ -98,7 +96,7 @@ def duplicates_remover(
             duplicates_imgs.append((duplicates, _similarity))
 
     if len(duplicates_imgs) == 0:
-        print(bcolors.GREEN + "\u2714" + bcolors.ENDC + f" No duplicates found!\n")
+        print(bcolors.GREEN + "\u2714" + bcolors.ENDC + f" No duplicates found!")
         return
 
     else:
@@ -139,4 +137,7 @@ def duplicates_remover(
                 + f" All images deleted succesfully. You saved {round(space_saved / 1000000, 2)}MB of space!"
             )
         else:
-            print("Thank you for Using Duplicate Remover")
+            print()
+            print(
+                bcolors.BLUE + "\u2731" + bcolors.ENDC + " No images has been removed"
+            )

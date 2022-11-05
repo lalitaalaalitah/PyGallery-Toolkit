@@ -1,16 +1,16 @@
 import os
-from datetime import datetime
 from shutil import copy2
 
-from src.constants.constants import (
-    DATETAKEN_TEMPLATE,
+from src.constants.allowed_extensions import (
     IMG_EXTENSIONS,
     OTHER_ALLOWED_EXTENSIONS,
     VIDEO_EXTENSIONS,
 )
+from src.constants.datetaken_templates import FIX_DATETIME_MODE
 from src.features.duplicates_remover.duplicates_remover import duplicates_remover
 from src.features.exif_fixer.exif_fixer import exif_fixer
-from src.utils.console import bcolors, printProgressBar
+from src.features.file_organizer.file_organizer import file_organizer
+from src.utils.console import bcolors
 
 
 def get_filepaths(path: str, recursive: bool):
@@ -31,17 +31,21 @@ def get_filepaths(path: str, recursive: bool):
 
 
 def filter_filepaths(filepaths: list[tuple[str, str]], allowed_ext: set[str]):
-    return [(fp, fn) for fp, fn in filepaths if os.path.splitext(fn)[-1] in allowed_ext]
+    return [
+        (fp, fn)
+        for fp, fn in filepaths
+        if os.path.splitext(fn)[-1].lower() in allowed_ext
+    ]
 
 
 def main(
     input_path: str,
     output_path: str,
     recursive: bool,
-    fix_datetaken: DATETAKEN_TEMPLATE,
-    overwrite_datetaken: bool,
+    fix_datetaken_mode: FIX_DATETIME_MODE,
     hash_size: int,
     similarity: int,
+    folder_structure: str,
 ):
     print()
 
@@ -84,11 +88,11 @@ def main(
         bcolors.BLUE
         + "\u2731"
         + bcolors.ENDC
-        + f" {num_files} of that files has a valid extension ({100 * num_files / len(filepaths)}%), and will be copied to the output directory"
+        + f" {num_files} of that files has a valid extension ({round(100 * num_files / len(get_filepaths(input_path, recursive)),2)}%), and will be copied to the output directory"
     )
     print()
 
-    exif_fixer(input_path, output_path, filepaths, fix_datetaken, overwrite_datetaken)
+    exif_fixer(input_path, output_path, filepaths, fix_datetaken_mode)
 
     duplicates_remover(
         filter_filepaths(
@@ -98,3 +102,8 @@ def main(
         hash_size,
         similarity,
     )
+
+    file_organizer(get_filepaths(output_path, recursive), output_path, folder_structure)
+
+    print()
+    print(bcolors.GREEN + "\u2714 All done! Your gallery is ready!" + bcolors.ENDC)

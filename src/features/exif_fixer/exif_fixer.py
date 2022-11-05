@@ -1,30 +1,33 @@
 import os
-import re
 from datetime import datetime
 from shutil import copy2
 
-import datefinder
+import filedate
 import piexif
-from src.constants.constants import DATETAKEN_TEMPLATE
+from src.constants.datetaken_templates import FILENAMES, FIX_DATETIME_MODE
 from src.utils.console import bcolors, printProgressBar
 
-img_filename_regex = re.compile(r"^IMG-\d{8}-WA\d{4}\.*\w*")
-vid_filename_regex = re.compile(r"^VID-\d{8}-WA\d{4}\.*\w*")
 
+def get_datetime(filename: str):
+    """Get the datetime of the file based on the name.
 
-def get_datetime(filename: str, mode: DATETAKEN_TEMPLATE):
-    if mode == DATETAKEN_TEMPLATE.WHATSAPP.value:
-        if (not bool(img_filename_regex.match(filename))) and (
-            not bool(vid_filename_regex.match(filename))
-        ):
-            return None
+    Solution for managing the suffix thanks to: https://stackoverflow.com/questions/5045210/how-to-remove-unconverted-data-from-a-python-datetime-object
+    """
 
-        date_str = filename.split("-")[1]
-        return datetime.strptime(date_str, "%Y%m%d")
-    elif mode == DATETAKEN_TEMPLATE.AUTO.value:
-        matches = list(datefinder.find_dates(filename))
-        if len(matches) > 0 and isinstance(matches[0], datetime):
-            return matches[0]
+    for date_format in FILENAMES:
+        try:
+            end_date = datetime.strptime(filename, date_format)
+            return end_date
+        except ValueError as v:
+            ulr = len(v.args[0].partition("unconverted data remains: ")[2])
+            if ulr:
+                try:
+                    end_date = datetime.strptime(filename[:-ulr], date_format)
+                    return end_date
+                except:
+                    continue
+            else:
+                continue
 
 
 def get_exif_datestr(datetime: datetime):
@@ -33,8 +36,10 @@ def get_exif_datestr(datetime: datetime):
 
 def modify_filetime(new_time: datetime, filepath: str):
     try:
-        modTime = new_time.timestamp()
-        os.utime(filepath, (modTime, modTime))
+        date_str = new_time.strftime("%m/%d/%Y %H:%M:%S")
+        filedate.File(filepath).set(
+            created=date_str,
+        )
         return True
     except:
         return False
@@ -44,8 +49,7 @@ def exif_fixer(
     input_path: str,
     output_path: str,
     filepaths: list[tuple[str, str]],
-    fix_datetaken: DATETAKEN_TEMPLATE,
-    overwrite_datetaken: bool,
+    fix_datetaken_mode: FIX_DATETIME_MODE,
 ):
     num_files = len(filepaths)
 
@@ -59,30 +63,39 @@ def exif_fixer(
 
     for i, (path, filename) in enumerate(filepaths):
 
+        new_filepath = ""
+
         if input_path != output_path:
-            copy2(input_path + "/" + filename, output_path + "/" + filename)
+            copy2(os.path.join(path, filename), output_path + "/" + filename)
 
-        filepath = os.path.join(output_path, filename)
+            new_filepath = os.path.join(output_path, filename)
 
-        if not os.path.exists(input_path):
+        if new_filepath == "":
+            new_filepath = os.path.join(path, filename)
+
+        if not os.path.exists(new_filepath):
             raise Exception("Error copying the file to the output directory")
 
         printProgressBar(
             i + 1, num_files, prefix="Creating new files:", suffix="Complete", length=50
         )
 
-        file_datetime = get_datetime(filename, fix_datetaken)
+        if fix_datetaken_mode == FIX_DATETIME_MODE.NEVER.value:
+            files_skipped += 1
+            continue
+
+        file_datetime = get_datetime(filename)
 
         if not file_datetime:
             files_skipped += 1
             continue
 
         try:
-            exif_dict = piexif.load(filepath)
+            exif_dict = piexif.load(new_filepath)
 
             if (
                 exif_dict["Exif"].get(piexif.ExifIFD.DateTimeOriginal)
-                and not overwrite_datetaken
+                and fix_datetaken_mode == FIX_DATETIME_MODE.NO_OVERWRITE.value
             ):
                 files_skipped += 1
                 continue
@@ -92,28 +105,28 @@ def exif_fixer(
             )
 
             exif_bytes = piexif.dump(exif_dict)
-            piexif.insert(exif_bytes, filepath)
+            piexif.insert(exif_bytes, new_filepath)
 
-            if overwrite_datetaken:
-                if not modify_filetime(file_datetime, filepath):
+            if fix_datetaken_mode == FIX_DATETIME_MODE.OVERWRITE.value:
+                if not modify_filetime(file_datetime, new_filepath):
                     files_with_errors += 1
 
             files_modified += 1
 
         except piexif.InvalidImageDataError:
-            if not overwrite_datetaken:
+            if fix_datetaken_mode == FIX_DATETIME_MODE.NO_OVERWRITE.value:
                 files_skipped += 1
             else:
-                if modify_filetime(file_datetime, filepath):
+                if modify_filetime(file_datetime, new_filepath):
                     files_modified += 1
                 else:
                     files_with_errors += 1
             continue
         except:
-            if not overwrite_datetaken:
+            if fix_datetaken_mode == FIX_DATETIME_MODE.NO_OVERWRITE.value:
                 files_skipped += 1
             else:
-                if modify_filetime(file_datetime, filepath):
+                if modify_filetime(file_datetime, new_filepath):
                     files_modified += 1
                 else:
                     files_with_errors += 1

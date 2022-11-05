@@ -1,11 +1,3 @@
-from enum import Enum
-
-
-class DATETAKEN_TEMPLATE(Enum):
-    AUTO = "auto"
-    WHATSAPP = "whatsapp"
-
-
 OTHER_ALLOWED_EXTENSIONS = [".mp4", ".txt", ".json"]
 
 VIDEO_EXTENSIONS = [
