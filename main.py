@@ -30,7 +30,7 @@ if __name__ == "__main__":
         choices=list(map(lambda x: x.value, FIX_DATETIME_MODE._member_map_.values())),
         required=False,
         default=FIX_DATETIME_MODE.NO_OVERWRITE.value,
-        help="File metadata update/correction mode",
+        help=f"File metadata update/correction mode. Defaults to {FIX_DATETIME_MODE.NO_OVERWRITE.value}, that is, do not update the metadata if already exists",
     )
 
     parser.add_argument(
