@@ -17,5 +17,5 @@ file_organizer:
 duplicates_search:
   enabled: true
   hash_size: 64
-  similarity: 80
+  similarity: 95
   plot_before_confirm: true
