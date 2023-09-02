@@ -11,6 +11,7 @@ from src.features.datetime_fixer.datetime_fixer import datetime_fixer
 from src.features.duplicates_remover.duplicates_remover import duplicates_remover
 from src.features.file_organizer.file_organizer import file_organizer
 from src.utils import rich_console
+from src.utils.remove_empty_folders import remove_empty_folders
 from src.utils.rich_console import console, print_error, print_separator, progress_bar
 
 
@@ -70,6 +71,10 @@ def main(
         rich_console.console.print(
             "[blue bold][INFO]:[/blue bold] Output directory not found. A new one has been created"
         )
+    elif len(os.listdir(path_full_destination)) > 0:
+        rich_console.console.print(
+            "[blue bold][INFO]:[/blue bold] The output directory has already some content. Some files may be overwritten"
+        )
 
     # Wheter the search is recursive in the input folder
     recursive: bool = USER_SETTINGS.get("recursive")  # type: ignore
@@ -114,13 +119,29 @@ def main(
         ):
             new_filepath = ""
 
-            if input_path != output_path:
-                copy2(os.path.join(path, filename), output_path + "/" + filename)
+            print(path)
+            print(os.path.relpath(path, input_path))
+            print(
+                os.path.join(output_path, os.path.relpath(path, input_path), filename)
+            )
+            print("__________")
 
-                new_filepath = os.path.join(output_path, filename)
+            file_destination = os.path.join(
+                output_path, os.path.relpath(path, input_path)
+            )
 
-            if new_filepath == "":
-                new_filepath = os.path.join(path, filename)
+            if not os.path.exists(file_destination):
+                os.makedirs(file_destination)
+                rich_console.print_log(
+                    f"The subdirectory `{file_destination}` has been created"
+                )
+
+            new_filepath = os.path.join(file_destination, filename)
+
+            copy2(
+                os.path.join(path, filename),
+                new_filepath,
+            )
 
             if not os.path.exists(new_filepath):
                 raise Exception("Error copying the file to the output directory")
@@ -142,6 +163,17 @@ def main(
             ),
             hash_size,
             similarity,
+        )
+
+    console.print(
+        "[blue bold][INFO]:[/blue bold] Analyzing possible remains of empty directories..."
+    )
+
+    folders_removed = remove_empty_folders(os.path.abspath(output_path))
+
+    if len(folders_removed) > 0:
+        console.print(
+            f"[blue bold][INFO]:[/blue bold] {len(folders_removed)} empty folder(s) has been removed"
         )
 
     print()

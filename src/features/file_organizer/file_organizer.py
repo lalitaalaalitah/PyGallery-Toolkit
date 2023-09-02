@@ -12,23 +12,6 @@ from src.constants.new_filenames_utils import (
 from src.utils.rich_console import console, progress_bar
 
 
-def remove_empty_folders(path_abs: str):
-    """
-    Remove the empty folders and subfolders in the specific path, and returns a list with the deleted folders
-    """
-
-    walk = list(os.walk(path_abs))
-
-    removed_directories: list[str] = []
-
-    for path, _, _ in walk[::-1]:
-        if len(os.listdir(path)) == 0:
-            os.rmdir(path)
-            removed_directories.append(path)
-
-    return removed_directories
-
-
 def get_datefile(filepath: str):
     try:
         exif_dict = piexif.load(filepath)
@@ -127,10 +110,3 @@ def file_organizer(
 
             if filepath != new_file_location:
                 os.remove(filepath)
-
-        folders_removed = remove_empty_folders(os.path.abspath(output_path))
-
-        if len(folders_removed) > 0:
-            print(
-                f"\n[blue bold][INFO]:[/blue bold] {len(folders_removed)} empty folders has been removed"
-            )
