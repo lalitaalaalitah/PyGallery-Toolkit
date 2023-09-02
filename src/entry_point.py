@@ -119,13 +119,6 @@ def main(
         ):
             new_filepath = ""
 
-            print(path)
-            print(os.path.relpath(path, input_path))
-            print(
-                os.path.join(output_path, os.path.relpath(path, input_path), filename)
-            )
-            print("__________")
-
             file_destination = os.path.join(
                 output_path, os.path.relpath(path, input_path)
             )
