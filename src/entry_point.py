@@ -117,8 +117,6 @@ def main(
         for path, filename in p.track(
             filepaths_to_copy, description=f"Copying files to [i]./{output_path}[/i]:"
         ):
-            new_filepath = ""
-
             file_destination = os.path.join(
                 output_path, os.path.relpath(path, input_path)
             )
