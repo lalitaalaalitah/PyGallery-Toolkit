@@ -1,70 +1,64 @@
-import argparse
+import json
+from pathlib import Path
+from time import sleep
 
-from src.constants.datetaken_templates import FIX_DATETIME_MODE
+import jsonschema
+from jsonschema import validate
+from rich import box
+from rich.panel import Panel
+
+from src.constants import allowed_extensions
+from src.constants.user_settings import USER_SETTINGS
 from src.entry_point import main
+from src.utils.rich_console import console, print_error, print_warn
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Restore discarded Exif date information in WhatsApp media based on the filename. For videos, only the created and modified dates are set",
-        add_help=True,
-        exit_on_error=True,
+    print()
+    console.print(
+        Panel.fit(
+            "Created with ❤ by [link=https://github.com/enrique-lozano]Enrique Lozano[/] and maintened by the Open Source community.",
+            box=box.ROUNDED,
+            padding=(1, 2),
+            title="[b blue]Thanks for trying out PyGallery!",
+            border_style="bright_blue",
+        ),
+        justify="center",
     )
 
-    parser.add_argument("--input_path", type=str, help="Path to the images to proccess")
-    parser.add_argument(
-        "--output_path",
-        type=str,
-        help="Path to save the proccessed images. If it is the same as the input_path the images will be overwritten in that same directory",
+    sleep(1.5)
+
+    console.print(
+        "\n[blue bold][INFO]:[/blue bold] Starting the program... Get ready to organize your local gallery!!!"
     )
 
-    parser.add_argument(
-        "--recursive",
-        action=argparse.BooleanOptionalAction,
-        required=False,
-        help="Recursively process media (look for media in all the subfolders of the input_path) or not.\nDefaults to True (--recursive)",
-    )
-    parser.set_defaults(recursive=True)
+    sleep(0.5)
 
-    parser.add_argument(
-        "--fix_datetaken_mode",
-        choices=list(map(lambda x: x.value, FIX_DATETIME_MODE._member_map_.values())),
-        required=False,
-        default=FIX_DATETIME_MODE.NO_OVERWRITE.value,
-        help=f"File metadata update/correction mode. Defaults to {FIX_DATETIME_MODE.NO_OVERWRITE.value}, that is, do not update the metadata if already exists",
-    )
+    try:
+        validate(
+            instance=USER_SETTINGS,
+            schema=json.loads(Path("settings/settings_schema.json").read_text()),
+        )
+    except jsonschema.ValidationError:
+        print_error(
+            title="Error validating your config file.",
+            descr="Please check that your config file is correct. Your config file (in [u]settings/user_settings.yaml[/u]) should match the schema defined in our [u]settings/settings_schema.json[/u]. To match the required schema, we recommend to use an IDE like VSCode to display the errors on the yaml file",
+        )
 
-    parser.add_argument(
-        "--hash_size",
-        type=int,
-        required=False,
-        default=64,
-        help="Hash size. Used for identification of similar images. With larger values the search will be more exhaustive but slower. Giving a value of 0 skips the search for duplicates/similar altogether. Defaults to 64",
-    )
+    if (
+        USER_SETTINGS.get("include_all_files") is True
+        and allowed_extensions.OTHER_ALLOWED_EXTENSIONS is not None
+    ):
+        print_warn(
+            "The [i]include_extra_formats[/i] option will have no effect since all the files will be parsed (the option [i]include_all_files[/i] is true). You can remove this option from your config file if you want."
+        )
 
-    parser.add_argument(
-        "--similarity",
-        type=int,
-        required=False,
-        default=99,
-        help="Similarity of the images to be deleted by the user (always after being asked during the process). It is a number from 0 to 100, with 100 being the number to pass when we want only completely identical images to appear. This parameter does not affect the speed of the process, as does --hash_size. Defaults to 99",
-    )
-
-    parser.add_argument(
-        "--folder_structure",
-        type=str,
-        required=False,
-        default="year>month",
-        help="Folder tree in which your files will be organized based on their metadata. By default it is 'year>month', that is, first folders will be created with the years of the files, and within these, folders with the months. Within each month the corresponding files will be located. You can find more information about how to customize your organization in the github repo",
-    )
-
-    args = parser.parse_args()
+    console.print("\n[green bold][OK]:[/green bold] User config readed successfully.")
 
     main(
-        args.input_path,
-        args.output_path,
-        args.recursive,
-        args.fix_datetaken_mode,
-        args.hash_size,
-        args.similarity,
-        args.folder_structure,
+        input_path=USER_SETTINGS.get("input_path"),  # type: ignore
+        output_path=USER_SETTINGS.get("output_path"),  # type: ignore
+        force_datetime_fix=USER_SETTINGS.get("datetime_fixer").get("force"),  # type: ignore
+        hash_size=USER_SETTINGS.get("duplicates_search").get("hash_size"),  # type: ignore
+        similarity=USER_SETTINGS.get("duplicates_search").get("similarity"),  # type: ignore
+        folder_structure=USER_SETTINGS.get("file_organizer").get("folder_structure"),  # type: ignore
     )

@@ -1,15 +1,17 @@
 import os
 from datetime import datetime
-from shutil import copy2
 
 import filedate
 import piexif
-from src.constants.datetaken_templates import FILENAMES, FIX_DATETIME_MODE
-from src.utils.console import bcolors, printProgressBar
+from rich.progress import track
+from rich.table import Table
+
+from src.constants.datetaken_templates import FILENAMES
+from src.utils.rich_console import console, print_log, progress_bar
 
 
-def get_datetime(filename: str):
-    """Get the datetime of the file based on the name.
+def get_datetime_from_filename(filename: str):
+    """Get the datetime of the file based on its name.
 
     Solution for managing the suffix thanks to: https://stackoverflow.com/questions/5045210/how-to-remove-unconverted-data-from-a-python-datetime-object
     """
@@ -45,119 +47,112 @@ def modify_filetime(new_time: datetime, filepath: str):
         return False
 
 
-def exif_fixer(
-    input_path: str,
-    output_path: str,
+def datetime_fixer(
     filepaths: list[tuple[str, str]],
-    fix_datetaken_mode: FIX_DATETIME_MODE,
+    force_fix: bool,
 ):
-    num_files = len(filepaths)
-
-    printProgressBar(
-        0, num_files, prefix="Creating new files:", suffix="Complete", length=50
+    console.print(
+        f"[blue bold][INFO]:[/blue bold] Starting the datetime-fixer with the force mode {'enabled' if force_fix else 'disabled'}.\n"
     )
 
     files_modified = 0
     files_skipped = 0
     files_with_errors = 0
 
-    for i, (path, filename) in enumerate(filepaths):
+    with progress_bar() as p:
+        for path, filename in p.track(filepaths, description="Fixing metadata:"):
+            filepath = os.path.join(path, filename)
 
-        new_filepath = ""
+            file_datetime = get_datetime_from_filename(filename)
 
-        if input_path != output_path:
-            copy2(os.path.join(path, filename), output_path + "/" + filename)
-
-            new_filepath = os.path.join(output_path, filename)
-
-        if new_filepath == "":
-            new_filepath = os.path.join(path, filename)
-
-        if not os.path.exists(new_filepath):
-            raise Exception("Error copying the file to the output directory")
-
-        printProgressBar(
-            i + 1, num_files, prefix="Creating new files:", suffix="Complete", length=50
-        )
-
-        if fix_datetaken_mode == FIX_DATETIME_MODE.NEVER.value:
-            files_skipped += 1
-            continue
-
-        file_datetime = get_datetime(filename)
-
-        if not file_datetime:
-            files_skipped += 1
-            continue
-
-        try:
-            exif_dict = piexif.load(new_filepath)
-
-            if (
-                exif_dict["Exif"].get(piexif.ExifIFD.DateTimeOriginal)
-                and fix_datetaken_mode == FIX_DATETIME_MODE.NO_OVERWRITE.value
-            ):
+            if not file_datetime:
                 files_skipped += 1
+                print_log(
+                    f"[orange1]\u2714[/orange1] File {filename} -> Skipped (date can not be found in its name)"
+                )
                 continue
 
-            exif_dict["Exif"][piexif.ExifIFD.DateTimeOriginal] = get_exif_datestr(
-                file_datetime
-            )
+            try:
+                exif_dict = piexif.load(filepath)
 
-            exif_bytes = piexif.dump(exif_dict)
-            piexif.insert(exif_bytes, new_filepath)
+                if (not force_fix) and exif_dict["Exif"].get(
+                    piexif.ExifIFD.DateTimeOriginal
+                ):
+                    files_skipped += 1
+                    print_log(
+                        f"[orange1]\u2714[/orange1] File {filename} -> Skipped (datetaken already in exif)"
+                    )
+                    continue
 
-            if fix_datetaken_mode == FIX_DATETIME_MODE.OVERWRITE.value:
-                if not modify_filetime(file_datetime, new_filepath):
-                    files_with_errors += 1
+                exif_dict["Exif"][piexif.ExifIFD.DateTimeOriginal] = get_exif_datestr(
+                    file_datetime
+                )
 
-            files_modified += 1
+                exif_bytes = piexif.dump(exif_dict)
+                piexif.insert(exif_bytes, filepath)
 
-        except piexif.InvalidImageDataError:
-            if fix_datetaken_mode == FIX_DATETIME_MODE.NO_OVERWRITE.value:
-                files_skipped += 1
-            else:
-                if modify_filetime(file_datetime, new_filepath):
-                    files_modified += 1
+                if force_fix:
+                    if not modify_filetime(file_datetime, filepath):
+                        files_with_errors += 1
+                        console.print(
+                            f"[red][LOG]:[/red] [green]\u2716[/green] File {filename} -> Error: Modify date can not be setted"
+                        )
+
+                files_modified += 1
+                print_log(f"[green]\u2714[/green] File {filename} -> Metadata updated")
+
+            except piexif.InvalidImageDataError:
+                if not force_fix:
+                    files_skipped += 1
+                    print_log(
+                        f"[orange1]\u2714[/orange1] File {filename} -> Skipped (creation date already in file info)"
+                    )
                 else:
-                    files_with_errors += 1
-            continue
-        except:
-            if fix_datetaken_mode == FIX_DATETIME_MODE.NO_OVERWRITE.value:
-                files_skipped += 1
-            else:
-                if modify_filetime(file_datetime, new_filepath):
-                    files_modified += 1
+                    if modify_filetime(file_datetime, filepath):
+                        print_log(
+                            f"[green]\u2714[/green] File {filename} -> File creation date updated"
+                        )
+                        files_modified += 1
+                    else:
+                        files_with_errors += 1
+                        console.print(
+                            f"[red][LOG]:[/red] [green]\u2716[/green] File {filename} -> Error: Modify date can not be setted"
+                        )
+                continue
+            except:
+                if not force_fix:
+                    files_skipped += 1
                 else:
-                    files_with_errors += 1
-            continue
+                    if modify_filetime(file_datetime, filepath):
+                        files_modified += 1
+                        print_log(
+                            f"[green]\u2714[/green] File {filename} -> File creation date updated"
+                        )
+                    else:
+                        files_with_errors += 1
+                        console.print(
+                            f"[red][LOG]:[/red] [green]\u2716[/green] File {filename} -> Error: Modify date can not be setted"
+                        )
+                continue
 
-    print()
-    print(
-        bcolors.BLUE
-        + "\u2731"
-        + bcolors.ENDC
-        + " All files have been successfully processed!"
-    )
-    print()
-    print("Results:")
-    print(
-        bcolors.GREEN
-        + "\u2714"
-        + bcolors.ENDC
-        + f" {files_modified} file{'s' if files_modified != 1 else ''} have been copied with updated/fixed metadata"
-    )
-    print(
-        bcolors.WARNING
-        + "\u2714"
-        + bcolors.ENDC
-        + f" {files_skipped} file{'s' if files_skipped != 1 else ''} have been copied without changes in their metadata for not meeting the specified parameters"
-    )
-    print(
-        bcolors.FAIL
-        + "\u2714"
-        + bcolors.ENDC
-        + f" {files_with_errors} file{'s' if files_with_errors != 1 else ''} have been copied without changes in their metadata for some type of error"
+    console.print(
+        "[green bold][OK]:[/green bold] All files have been successfully processed!\n"
     )
 
-    print()
+    table = Table(
+        title="Results",
+        show_header=False,
+        show_lines=True,
+        title_justify="left",
+    )
+
+    table.add_column(no_wrap=True)
+    table.add_column(justify="right", style="bold")
+
+    table.add_row(
+        "[green]\u2714[/green] Files with new/updated metadata", f"{files_modified}"
+    )
+    table.add_row("[orange1]\u2714[/orange1] Files skipped", f"{files_skipped}")
+    table.add_row("[red]\u2716[/red] Files with error", f"{files_with_errors}")
+
+    console.print(table)

@@ -1,0 +1,5 @@
+{
+  "yaml.schemas": {
+    "./settings/settings_schema.json": "settings/user_settings.yaml"
+  }
+}

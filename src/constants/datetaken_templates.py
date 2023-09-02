@@ -1,12 +1,3 @@
-from enum import Enum
-
-
-class FIX_DATETIME_MODE(Enum):
-    OVERWRITE = "always"
-    NO_OVERWRITE = "no_overwrite"
-    NEVER = "never"
-
-
 """ The files whose name coincides with this format will be taken into account to fix their metadata, as long as the "auto" parameter is passed to the script. 
 
 The files whose name coincides with this format will be taken into account to fix their metadata, as long as the "auto" parameter is passed to the script. The file suffix is not taken into account, that is, if we have, for example, the format VID_%Y%m%d, the files "VID_20150618 copy.jpg", "VID_20150618(1).jpg", "VID_20150618jkcdkjjkd.jpg"

@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "extended_logger": {
+      "type": "boolean",
+      "description": "True if you want an extended logger that prints modifications/deletions on files in addition to other actions"
+    },
+    "include_all_files": {
+      "type": "boolean",
+      "description": "If true, all the content in the input directory will be copied to the output_path without any exception. If false, only photos and videos will be copied, apart of the files with a extension specified in the include_extra_formats param."
+    },
+    "include_extra_formats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of formats to include in the output_directory, apart of the photos and videos. Will have no effect if the include_all_files option is true"
+    },
+    "duplicates_search": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "If this feature will be triggered during the script",
+          "type": "boolean"
+        },
+        "hash_size": {
+          "default": 64,
+          "description": "Used for identification of similar images. With larger values the search will be more exhaustive but slower. Giving a value of 0 skips the search for duplicates/similar altogether",
+          "type": "number"
+        },
+        "similarity": {
+          "default": 99,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Similarity of the images that will trigger an action (the action will be chosen by the user). It is a number from 0 to 100, with 100 being the number to pass when we want only completely identical images to appear. This parameter does not affect the speed of the process, as does `hash_size`",
+          "type": "number"
+        },
+        "plot_before_confirm": {
+          "type": "boolean",
+          "description": "Plot/display relevant images in a new window before confirm some actions to apply on them"
+        }
+      },
+      "required": ["enabled", "hash_size", "similarity", "plot_before_confirm"],
+      "type": "object"
+    },
+    "datetime_fixer": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "If this feature will be triggered during the script",
+          "type": "boolean"
+        },
+        "force": {
+          "default": false,
+          "description": "Force the write of a new datetime in the metadata of the file. If false, the script will only write the datetime info on the files that don't have this data yet",
+          "type": "boolean"
+        }
+      },
+      "required": ["enabled", "force"],
+      "type": "object"
+    },
+    "file_organizer": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "If this feature will be triggered during the script",
+          "type": "boolean"
+        },
+        "folder_structure": {
+          "description": "Folder tree in which your files will be organized based on their metadata. By default it is 'year>month', that is, first folders will be created with the years of the files, and within these, folders with the months. Within each month the corresponding files will be located. You can find more information about how to customize your organization in the github repo",
+          "items": {
+            "enum": ["month", "year"],
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": ["enabled", "folder_structure"],
+      "type": "object"
+    },
+    "input_path": {
+      "type": "string"
+    },
+    "output_path": {
+      "type": "string"
+    },
+    "recursive": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "extended_logger",
+    "duplicates_search",
+    "datetime_fixer",
+    "file_organizer",
+    "input_path",
+    "output_path",
+    "recursive",
+    "include_all_files"
+  ],
+  "type": "object"
+}

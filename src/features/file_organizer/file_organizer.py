@@ -9,7 +9,7 @@ from src.constants.new_filenames_utils import (
     UNKOWN_LITERAL,
     VALID_NAME_KEYS,
 )
-from src.utils.console import bcolors, printProgressBar
+from src.utils.rich_console import console, progress_bar
 
 
 def remove_empty_folders(path_abs: str):
@@ -45,22 +45,20 @@ def get_datefile(filepath: str):
                 datetime.fromtimestamp(os.path.getmtime(filepath)),
             )
 
-    except:
+    except Exception:
         return min(
             datetime.fromtimestamp(os.path.getctime(filepath)),
             datetime.fromtimestamp(os.path.getmtime(filepath)),
         )
 
 
-def get_folder_path(folder_structure: str, filedate: datetime):
-    keys = folder_structure.split(">")
-
-    if len(keys) > 3:
+def get_folder_path(folder_structure: list[str], filedate: datetime):
+    if len(folder_structure) > 3:
         raise RecursionError("The max depth for the folder structure is 3")
 
     to_return: list[str] = []
 
-    for key in keys:
+    for key in folder_structure:
         key = key.strip()
         if key not in VALID_NAME_KEYS._value2member_map_:
             raise NameError(
@@ -76,7 +74,7 @@ def get_folder_path(folder_structure: str, filedate: datetime):
 
 
 def get_file_location(
-    _folder_structure: str, output_path: str, filename: str, filedate: datetime
+    _folder_structure: list[str], output_path: str, filename: str, filedate: datetime
 ):
     path_destination: str = ""
 
@@ -103,58 +101,36 @@ def get_file_location(
 
 
 def file_organizer(
-    filepaths: list[tuple[str, str]], output_path: str, folder_structure: str
+    filepaths: list[tuple[str, str]], output_path: str, folder_structure: list[str]
 ):
-    print()
-    print(
-        bcolors.BLUE + "\u2731" + bcolors.ENDC + " Starting to organize your library!\n"
-    )
+    with progress_bar() as p:
+        for path, filename in p.track(
+            filepaths, description="Organizing your library:"
+        ):
+            filepath = os.path.join(path, filename)
+            filedate = get_datefile(filepath)
 
-    printProgressBar(
-        0,
-        len(filepaths),
-        prefix="Organizing your library:",
-        suffix="Complete",
-        length=50,
-    )
-
-    for i, (path, filename) in enumerate(filepaths):
-        printProgressBar(
-            i + 1,
-            len(filepaths),
-            prefix="Organizing your library:",
-            suffix="Complete",
-            length=50,
-        )
-
-        filepath = os.path.join(path, filename)
-        filedate = get_datefile(filepath)
-
-        new_file_location = get_file_location(
-            folder_structure, output_path, filename, filedate
-        )
-
-        if not new_file_location:
-            continue
-
-        try:
-            copy2(
-                filepath,
-                new_file_location,
+            new_file_location = get_file_location(
+                folder_structure, output_path, filename, filedate
             )
-        except SameFileError:
-            continue
 
-        if filepath != new_file_location:
-            os.remove(filepath)
+            if not new_file_location:
+                continue
 
-    folders_removed = remove_empty_folders(os.path.abspath(output_path))
+            try:
+                copy2(
+                    filepath,
+                    new_file_location,
+                )
+            except SameFileError:
+                continue
 
-    if len(folders_removed) > 0:
-        print()
-        print(
-            bcolors.BLUE
-            + "\u2731"
-            + bcolors.ENDC
-            + f" {len(folders_removed)} empty folders has been removed"
-        )
+            if filepath != new_file_location:
+                os.remove(filepath)
+
+        folders_removed = remove_empty_folders(os.path.abspath(output_path))
+
+        if len(folders_removed) > 0:
+            print(
+                f"\n[blue bold][INFO]:[/blue bold] {len(folders_removed)} empty folders has been removed"
+            )
