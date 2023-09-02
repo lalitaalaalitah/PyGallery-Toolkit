@@ -28,15 +28,20 @@ If everything went well, you will see that a new folder has been created in the 
 
 ### Settings & Customization ⚙️
 
-Fantastic, right? But this is not all, many configuration options are also provided. You can consult your script settings by going to `settings > user_settings.yaml`. To modify this file is recommended to open it with an text editor such as VSCode (download [here](https://code.visualstudio.com/)) with the YAML extension installed.
+Fantastic, right? But this is not all, many configuration options are also provided. You can consult your script settings by going to `settings > user_settings.yaml`. To modify this file is recommended to open it with an text editor such as VSCode (download [here](https://code.visualstudio.com/)) with the YAML extension installed:
+
+ <img src="https://github.com/enrique-lozano/Image-organizer/assets/61509169/90597fcd-15f5-411f-b2bc-473bbe47ab2d" alt="YAML extension in VSCode" height="230">
 
 When you open this file with a well-configured text editor like the one mentioned above, when you place your cursor over each setting, you will see a brief description of what it does:
+
+ <img src="https://github.com/enrique-lozano/Image-organizer/assets/61509169/894ce7fc-5177-40ab-a949-4e3df94702ea" alt="Settings descriptions" height="230">
+
+You will also have warnings and errors if you type something wrong.
 
 ## Next updates 🔜
 
 - More keys to organize your folders
 - Improve application performance (especially in the search for duplicates)
-- Improve the way files are deleted, giving the user greater control
 
 ## Issues 🤕
 
