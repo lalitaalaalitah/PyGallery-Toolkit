@@ -3,7 +3,6 @@ from datetime import datetime
 
 import filedate
 import piexif
-from rich.progress import track
 from rich.table import Table
 
 from src.constants.datetaken_templates import FILENAMES
