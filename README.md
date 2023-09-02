@@ -4,7 +4,7 @@ Fix the metadata of your images and videos, find similar or duplicate images and
 
 ## Download/Installation steps 🚀
 
-To install the project you must have python 3 installed and added to your path. Once this step is done, you should run this command in the terminal, in the directory where you have cloned the project:
+To install the project you must have python 3 installed and added to your path. Once this step is done, you should clone/download this project and run this command in a terminal, in the directory where you have cloned the project:
 
 ```
 pip install -r requirements.txt
@@ -12,56 +12,25 @@ pip install -r requirements.txt
 
 **Notes:**
 
-> The project has been made with python version 3.10, so its compatibility with later or previous versions is not guaranteed. Also, has been only tested in a Windows machine, so it is also not guaranteed that the results will be optimal in other systems (please, open an issue if that is the case).
+> The project has been made with python version 3.11, so its compatibility with later or previous versions is not guaranteed. Also, has been only tested in a Windows machine, so it is also not guaranteed that the results will be optimal in other systems (please, open an issue if that is the case).
 
 ## Usage example 💡
 
-If the installation was successful, you are ready to start! To do it, paste some images into a new directory inside the project. That is, for example, create a folder called <code>input</code> in the root directory of the cloned project, and paste some files in .jpg / .jpeg. Then enter the following command:
+If the installation was successful, you are ready to start! To do it, paste some images into a new directory inside the project. By default, the input directory where you should paste the images should be called `input` but you can change it whatever you want in the user settings (see below).
+
+So, for example, to start, create a folder called <code>input</code> in the root directory of the cloned project, and paste some files in .jpg / .jpeg. Then enter the following command:
 
 ```
-python main.py --input_path='input' --output_path='output'
+python main.py
 ```
 
-If everything went well, you will see that a new folder has been created called <code>output</code>, where your photos are organized in subfolders by year and month
+If everything went well, you will see that a new folder has been created in the root folder of the project (by default called <code>output</code>). If you enter in this folder, you will see that your photos are organized in subfolders by year and month.
 
 ### Settings & Customization ⚙️
 
-Fantastic, right? But this is not all, many configuration options are also provided, which you can consult by typing <code>python main.py --help</code> in the terminal:
+Fantastic, right? But this is not all, many configuration options are also provided. You can consult your script settings by going to `settings > user_settings.yaml`. To modify this file is recommended to open it with an text editor such as VSCode (download [here](https://code.visualstudio.com/)) with the YAML extension installed.
 
-```
- --input_path INPUT_PATH
-                        Path to the images to proccess
-  --output_path OUTPUT_PATH
-                        Path to save the proccessed images. If it is the same as the input_path the images will be
-                        overwritten in that same directory
-  --recursive, --no-recursive
-                        Recursively process media (look for media in all the subfolders of the input_path) or not.
-                        Defaults to True (--recursive)
-  --fix_datetaken_mode {always,no_overwrite,never}
-                        File metadata update/correction mode. Defaults to no_overwrite, that is, do not update the
-                        metadata if already exists
-  --hash_size HASH_SIZE
-                        Hash size. Used for identification of similar images. With larger values the search will be
-                        more exhaustive but slower. Giving a value of 0 skips the search for duplicates/similar
-                        altogether. Defaults to 64
-  --similarity SIMILARITY
-                        Similarity of the images to be deleted by the user (always after being asked during the
-                        process). It is a number from 0 to 100, with 100 being the number to pass when we want only
-                        completely identical images to appear. This parameter does not affect the speed of the
-                        process, as does --hash_size. Defaults to 99
-  --folder_structure FOLDER_STRUCTURE
-                        Folder tree in which your files will be organized based on their metadata. By default it is
-                        'year>month', that is, first folders will be created with the years of the files, and within
-                        these, folders with the months. Within each month the corresponding files will be located
-```
-
-Special mention requires the last parameter mentioned here, folder_structure, which allows you to customize the new folder structure. To do this, we will pass something like "key1 > key2 > key3" to this parameter, where each ">" represents a depth level in the folder structure and each key, a value of the files metadata, that will be the folder names. At the moment only structuring by <code>month</code> and <code>year</code> is allowed but many more keys will arrive soon. To see the available keys and other useful parameters for this customization visit <a href="https://github.com/enrique-lozano/Image-organizer/blob/main/src/constants/new_filenames_utils.py">this file</a>
-
-So for example, to run the program with some of these more advanced settings, we could put something like this::
-
-```
-python main.py --input_path='input' --output_path='output' --fix_datetaken="always" --hash_size=32 --folder_structure="year > month"
-```
+When you open this file with a well-configured text editor like the one mentioned above, when you place your cursor over each setting, you will see a brief description of what it does:
 
 ## Next updates 🔜
 
