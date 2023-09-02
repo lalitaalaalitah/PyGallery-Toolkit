@@ -1,4 +1,4 @@
-# Image organizer 📂🖼️​​
+# PyGallery organizer 📂🖼️​​
 
 Fix the metadata of your images and videos, find similar or duplicate images and organize your folder structure to create a well-organized gallery. All this in a simple script!
 
