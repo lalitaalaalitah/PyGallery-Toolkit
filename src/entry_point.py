@@ -139,7 +139,7 @@ def main(
 
     if USER_SETTINGS.get("datetime_fixer").get("enabled"):  # type: ignore
         print_separator("Datetime fixer")
-        datetime_fixer(filepaths_to_copy, force_datetime_fix)
+        datetime_fixer(get_filepaths(output_path, True), force_datetime_fix)
 
     if USER_SETTINGS.get("file_organizer").get("enabled"):  # type: ignore
         print_separator("Organize files")
