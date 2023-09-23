@@ -7,9 +7,9 @@ from src.constants.allowed_extensions import (
     VIDEO_EXTENSIONS,
 )
 from src.constants.user_settings import USER_SETTINGS
-from src.features.datetime_fixer.datetime_fixer import metadata_fixer
 from src.features.duplicates_remover.duplicates_remover import duplicates_remover
 from src.features.file_organizer.file_organizer import file_organizer
+from src.features.metadata_fixer.metadata_fixer import metadata_fixer
 from src.utils import rich_console
 from src.utils.remove_empty_folders import remove_empty_folders
 from src.utils.rich_console import console, print_error, print_separator, progress_bar
