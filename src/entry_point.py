@@ -7,7 +7,7 @@ from src.constants.allowed_extensions import (
     VIDEO_EXTENSIONS,
 )
 from src.constants.user_settings import USER_SETTINGS
-from src.features.datetime_fixer.datetime_fixer import datetime_fixer
+from src.features.datetime_fixer.datetime_fixer import metadata_fixer
 from src.features.duplicates_remover.duplicates_remover import duplicates_remover
 from src.features.file_organizer.file_organizer import file_organizer
 from src.utils import rich_console
@@ -137,9 +137,13 @@ def main(
             if not os.path.exists(new_filepath):
                 raise Exception("Error copying the file to the output directory")
 
-    if USER_SETTINGS.get("datetime_fixer").get("enabled"):  # type: ignore
+    if USER_SETTINGS.get("metadata_fixer").get("enabled"):  # type: ignore
         print_separator("Datetime fixer")
-        datetime_fixer(get_filepaths(output_path, True), force_datetime_fix)
+        metadata_fixer(
+            get_filepaths(output_path, True),
+            force_datetime_fix,
+            USER_SETTINGS.get("metadata_fixer").get("fill_missing_datetime_info_from"),  # type: ignore
+        )
 
     if USER_SETTINGS.get("file_organizer").get("enabled"):  # type: ignore
         print_separator("Organize files")

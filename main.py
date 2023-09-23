@@ -57,7 +57,7 @@ if __name__ == "__main__":
     main(
         input_path=USER_SETTINGS.get("input_path"),  # type: ignore
         output_path=USER_SETTINGS.get("output_path"),  # type: ignore
-        force_datetime_fix=USER_SETTINGS.get("datetime_fixer").get("force"),  # type: ignore
+        force_datetime_fix=USER_SETTINGS.get("metadata_fixer").get("overwrite_datetime"),  # type: ignore
         hash_size=USER_SETTINGS.get("duplicates_search").get("hash_size"),  # type: ignore
         similarity=USER_SETTINGS.get("duplicates_search").get("similarity"),  # type: ignore
         folder_structure=USER_SETTINGS.get("file_organizer").get("folder_structure"),  # type: ignore

@@ -1,8 +1,9 @@
 import os
 from datetime import datetime
+from typing import Any, Literal
 
+import exiftool
 import filedate
-import piexif
 from rich.table import Table
 
 from src.constants.datetaken_templates import FILENAMES
@@ -46,97 +47,138 @@ def modify_filetime(new_time: datetime, filepath: str):
         return False
 
 
-def datetime_fixer(
+FileStatus = Literal["updated"] | Literal["skipped"] | Literal["error"]
+
+
+def get_filedate(
+    way: Literal["filename"] | Literal["filedate"], filename: str, filepath: str
+):
+    if way == "filename":
+        return get_datetime_from_filename(filename)
+
+    elif way == "filedate":
+        return datetime.fromtimestamp(
+            os.path.getctime(filepath) or os.path.getmtime(filepath)
+        )
+
+
+def metadata_fixer(
     filepaths: list[tuple[str, str]],
-    force_fix: bool,
+    overwrite_datetime: bool,
+    fill_missing_datetime_info_from: list[Literal["filename"] | Literal["filedate"]],
 ):
     console.print(
-        f"[blue bold][INFO]:[/blue bold] Starting the datetime-fixer with the force mode {'enabled' if force_fix else 'disabled'}.\n"
+        f"[blue bold][INFO]:[/blue bold] Starting the datetime-fixer with the force mode {'enabled' if overwrite_datetime else 'disabled'}.\n"
     )
 
-    files_modified = 0
-    files_skipped = 0
-    files_with_errors = 0
+    results: list[FileStatus] = []
 
     with progress_bar() as p:
         for path, filename in p.track(filepaths, description="Fixing metadata:"):
             filepath = os.path.join(path, filename)
 
-            file_datetime = get_datetime_from_filename(filename)
+            file_status: FileStatus = "skipped"
 
-            if not file_datetime:
-                files_skipped += 1
-                print_log(
-                    f"[orange1]\u2714[/orange1] File {filename} -> Skipped (date can not be found in its name)"
+            with exiftool.ExifToolHelper() as et:
+                metadata: dict[str, Any] = et.get_metadata(filepath)[0]
+
+                # ------------------------------------------------- #
+                # ------------- DATETIME EXIF FIXER --------------- #
+                # ------------------------------------------------- #
+
+                """ We should edit the dates if the force mode is enabled or if no DateTimeOriginal tag is in the metadata"""
+                shouldEditDates = (
+                    overwrite_datetime
+                    or sum(
+                        1
+                        for key in metadata.keys()
+                        if len(key.split(":")) > 1
+                        and key.split(":")[1] == "DateTimeOriginal"
+                    )
+                    == 0
                 )
-                continue
 
-            try:
-                exif_dict = piexif.load(filepath)
+                if shouldEditDates:
+                    file_datetime: datetime | None = None
 
-                if (not force_fix) and exif_dict["Exif"].get(
-                    piexif.ExifIFD.DateTimeOriginal
+                    for datimegetter in fill_missing_datetime_info_from:
+                        if file_datetime is None:
+                            file_datetime = get_filedate(
+                                datimegetter, filename, filepath
+                            )
+
+                    if file_datetime:
+                        et.set_tags(
+                            filepath,
+                            {
+                                "DateTimeOriginal": get_exif_datestr(file_datetime),
+                                "CreateDate": get_exif_datestr(file_datetime),
+                            },
+                            params=["-overwrite_original"],
+                        )
+
+                        print_log(
+                            f"[green]\u2714[/green] File {filename} -> DateTime metadata updated"
+                        )
+
+                        file_status = "updated"
+
+                    else:
+                        print_log(
+                            f"[orange1]\u2714[/orange1] File {filename} -> Skipped (date can not be found)"
+                        )
+
+                else:
+                    print_log(
+                        f"[orange1]\u2714[/orange1] File {filename} -> Skipped (dateTimeOriginal already in metadata)"
+                    )
+
+                # ------------------------------------------------- #
+                # ---------------- GPS EXIF FIXER ----------------- #
+                # ------------------------------------------------- #
+
+                if (
+                    metadata.get("Composite:GPSPosition") is not None
+                    and sum(
+                        1
+                        for key in metadata.keys()
+                        if len(key.split(":")) > 0 and key.split(":")[0] == "QuickTime"
+                    )
+                    > 0
+                    and metadata.get("QuickTime:GPSCoordinates") is None
                 ):
-                    files_skipped += 1
-                    print_log(
-                        f"[orange1]\u2714[/orange1] File {filename} -> Skipped (datetaken already in exif)"
+                    gps_position = str(metadata.get("Composite:GPSPosition")).split(" ")
+                    new_latitude = round(float(gps_position[0]), 4)
+                    new_longitude = round(float(gps_position[1]), 4)
+
+                    # print(gps_position, new_latitude, new_longitude)
+
+                    et.set_tags(
+                        filepath,
+                        {
+                            "QuickTime:GPSCoordinates": " ".join(
+                                [
+                                    str(new_latitude),
+                                    str(new_longitude),
+                                ]
+                            ),
+                        },
+                        params=["-overwrite_original"],
                     )
-                    continue
 
-                exif_dict["Exif"][piexif.ExifIFD.DateTimeOriginal] = get_exif_datestr(
-                    file_datetime
-                )
-
-                exif_bytes = piexif.dump(exif_dict)
-                piexif.insert(exif_bytes, filepath)
-
-                if force_fix:
-                    if not modify_filetime(file_datetime, filepath):
-                        files_with_errors += 1
-                        console.print(
-                            f"[red][LOG]:[/red] [green]\u2716[/green] File {filename} -> Error: Modify date can not be setted"
-                        )
-
-                files_modified += 1
-                print_log(f"[green]\u2714[/green] File {filename} -> Metadata updated")
-
-            except piexif.InvalidImageDataError:
-                if not force_fix:
-                    files_skipped += 1
                     print_log(
-                        f"[orange1]\u2714[/orange1] File {filename} -> Skipped (creation date already in file info)"
+                        f"[green]\u2714[/green] File {filename} -> GPS metadata updated"
                     )
-                else:
-                    if modify_filetime(file_datetime, filepath):
-                        print_log(
-                            f"[green]\u2714[/green] File {filename} -> File creation date updated"
-                        )
-                        files_modified += 1
-                    else:
-                        files_with_errors += 1
-                        console.print(
-                            f"[red][LOG]:[/red] [green]\u2716[/green] File {filename} -> Error: Modify date can not be setted"
-                        )
-                continue
-            except:
-                if not force_fix:
-                    files_skipped += 1
-                else:
-                    if modify_filetime(file_datetime, filepath):
-                        files_modified += 1
-                        print_log(
-                            f"[green]\u2714[/green] File {filename} -> File creation date updated"
-                        )
-                    else:
-                        files_with_errors += 1
-                        console.print(
-                            f"[red][LOG]:[/red] [green]\u2716[/green] File {filename} -> Error: Modify date can not be setted"
-                        )
-                continue
+
+                    file_status = "updated"
+
+            results.append(file_status)
 
     console.print(
         "[green bold][OK]:[/green bold] All files have been successfully processed!\n"
     )
+
+    # ---- PRINT THE RESULTS ---- #
 
     table = Table(
         title="Results",
@@ -149,9 +191,12 @@ def datetime_fixer(
     table.add_column(justify="right", style="bold")
 
     table.add_row(
-        "[green]\u2714[/green] Files with new/updated metadata", f"{files_modified}"
+        "[green]\u2714[/green] Files with new/updated metadata",
+        f"{results.count('updated')}",
     )
-    table.add_row("[orange1]\u2714[/orange1] Files skipped", f"{files_skipped}")
-    table.add_row("[red]\u2716[/red] Files with error", f"{files_with_errors}")
+    table.add_row(
+        "[orange1]\u2714[/orange1] Files skipped", f"{results.count('skipped')}"
+    )
+    table.add_row("[red]\u2716[/red] Files with error", f"{results.count('error')}")
 
     console.print(table)

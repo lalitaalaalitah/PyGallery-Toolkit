@@ -1,21 +1,22 @@
 input_path: 'input'
 output_path: 'output'
 recursive: true
-extended_logger: false
+extended_logger: true
 
 include_all_files: false
 include_extra_formats: ['.mp3', '.txt', '.json']
 
-datetime_fixer:
+metadata_fixer:
   enabled: true
-  force: false
+  fill_missing_datetime_info_from: ['filename']
+  overwrite_datetime: false
 
 file_organizer:
-  enabled: true
+  enabled: false
   folder_structure: ['year', 'month']
 
 duplicates_search:
-  enabled: true
-  hash_size: 64
-  similarity: 95
+  enabled: false
+  hash_size: 16
+  similarity: 96
   plot_before_confirm: true
