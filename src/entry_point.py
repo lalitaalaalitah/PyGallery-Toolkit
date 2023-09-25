@@ -129,9 +129,13 @@ def main(
         filepaths_to_copy = filter_filepaths(
             filepaths_to_copy,
             allowed_ext=set(
-                IMG_EXTENSIONS + VIDEO_EXTENSIONS + OTHER_ALLOWED_EXTENSIONS
-                if OTHER_ALLOWED_EXTENSIONS is not None
-                else []
+                IMG_EXTENSIONS
+                + VIDEO_EXTENSIONS
+                + (
+                    OTHER_ALLOWED_EXTENSIONS
+                    if OTHER_ALLOWED_EXTENSIONS is not None
+                    else []
+                )
             ),
         )
 
@@ -178,7 +182,7 @@ def main(
                 raise Exception("Error copying the file to the output directory")
 
     if USER_SETTINGS.get("metadata_fixer").get("enabled"):  # type: ignore
-        print_separator("Datetime fixer")
+        print_separator("Metadata fixer")
         metadata_fixer(
             get_filepaths(output_path, True),
             force_datetime_fix,
