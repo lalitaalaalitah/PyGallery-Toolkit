@@ -109,20 +109,30 @@ def metadata_fixer(
                             )
 
                     if file_datetime:
-                        et.set_tags(
-                            filepath,
-                            {
-                                "DateTimeOriginal": get_exif_datestr(file_datetime),
-                                "CreateDate": get_exif_datestr(file_datetime),
-                            },
-                            params=["-overwrite_original"],
-                        )
+                        try:
+                            et.set_tags(
+                                filepath,
+                                {
+                                    "DateTimeOriginal": get_exif_datestr(file_datetime),
+                                    "CreateDate": get_exif_datestr(file_datetime),
+                                },
+                                params=["-overwrite_original"],
+                            )
 
-                        print_log(
-                            f"[green]\u2714[/green] File {filename} -> DateTime metadata updated"
-                        )
+                            print_log(
+                                f"[green]\u2714[/green] File {filename} -> DateTime metadata updated"
+                            )
 
-                        file_status = "updated"
+                            file_status = "updated"
+
+                        except:
+                            print_log(
+                                f"[red]\u2716[/red] File {filename} -> Error while trying to update the datetime"
+                            )
+
+                            file_status = "error"
+
+                            continue
 
                     else:
                         print_log(
@@ -154,24 +164,34 @@ def metadata_fixer(
 
                     # print(gps_position, new_latitude, new_longitude)
 
-                    et.set_tags(
-                        filepath,
-                        {
-                            "QuickTime:GPSCoordinates": " ".join(
-                                [
-                                    str(new_latitude),
-                                    str(new_longitude),
-                                ]
-                            ),
-                        },
-                        params=["-overwrite_original"],
-                    )
+                    try:
+                        et.set_tags(
+                            filepath,
+                            {
+                                "QuickTime:GPSCoordinates": " ".join(
+                                    [
+                                        str(new_latitude),
+                                        str(new_longitude),
+                                    ]
+                                ),
+                            },
+                            params=["-overwrite_original"],
+                        )
 
-                    print_log(
-                        f"[green]\u2714[/green] File {filename} -> GPS metadata updated"
-                    )
+                        print_log(
+                            f"[green]\u2714[/green] File {filename} -> GPS metadata updated"
+                        )
 
-                    file_status = "updated"
+                        file_status = "updated"
+
+                    except:
+                        print_log(
+                            f"[red]\u2716[/red] File {filename} -> Error while trying to update the GPS data"
+                        )
+
+                        file_status = "error"
+
+                        continue
 
                 results.append(file_status)
 
