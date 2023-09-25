@@ -6,6 +6,8 @@ It is appropriate that the list always go from the most precise format to least 
 
 To check the possible options to parse, check the table here https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
 """
+from datetime import datetime
+
 FILENAMES = [
     "Screenshot-%Y-%m-%d-%H-%M-%S",
     "Screenshot-%Y%m%d-%H%M%S",
@@ -20,3 +22,6 @@ FILENAMES = [
     "IMG_%Y%m%d",
     "VID_%Y%m%d",
 ]
+
+FILENAME_DATE_MIN = 1820
+FILENAME_DATE_MAX = datetime.now().year + 5

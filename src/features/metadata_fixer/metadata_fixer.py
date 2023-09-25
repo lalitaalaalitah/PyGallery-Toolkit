@@ -6,7 +6,11 @@ import exiftool
 import filedate
 from rich.table import Table
 
-from src.constants.datetaken_templates import FILENAMES
+from src.constants.datetaken_templates import (
+    FILENAME_DATE_MAX,
+    FILENAME_DATE_MIN,
+    FILENAMES,
+)
 from src.utils.rich_console import console, print_log, progress_bar
 
 
@@ -16,20 +20,29 @@ def get_datetime_from_filename(filename: str):
     Solution for managing the suffix thanks to: https://stackoverflow.com/questions/5045210/how-to-remove-unconverted-data-from-a-python-datetime-object
     """
 
+    end_date: datetime | None = None
+
     for date_format in FILENAMES:
         try:
             end_date = datetime.strptime(filename, date_format)
-            return end_date
+            break
         except ValueError as v:
             ulr = len(v.args[0].partition("unconverted data remains: ")[2])
             if ulr:
                 try:
                     end_date = datetime.strptime(filename[:-ulr], date_format)
-                    return end_date
+                    break
                 except:
                     continue
             else:
                 continue
+
+    if end_date is not None and (
+        end_date.year < FILENAME_DATE_MIN or end_date.year > FILENAME_DATE_MAX
+    ):
+        return None
+
+    return end_date
 
 
 def get_exif_datestr(datetime: datetime):
@@ -131,7 +144,7 @@ def metadata_fixer(
                             )
 
                             file_status = "error"
-
+                            results.append(file_status)
                             continue
 
                     else:
@@ -190,6 +203,7 @@ def metadata_fixer(
                         )
 
                         file_status = "error"
+                        results.append(file_status)
 
                         continue
 
