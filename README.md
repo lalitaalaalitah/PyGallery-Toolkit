@@ -30,23 +30,19 @@ If everything went well, you will see that a new folder has been created in the 
 
 Fantastic, right? But this is not all, many configuration options are also provided. You can consult your script settings by going to `settings > user_settings.yaml`. To modify this file is recommended to open it with an text editor such as VSCode (download [here](https://code.visualstudio.com/)) with the YAML extension installed:
 
- <img src="https://github.com/enrique-lozano/Image-organizer/assets/61509169/90597fcd-15f5-411f-b2bc-473bbe47ab2d" alt="YAML extension in VSCode" height="230">
+ <img src="https://user-images.githubusercontent.com/9625760/82730428-7b6fc880-9cf7-11ea-9d81-abee45435a3f.png" alt="YAML extension in VSCode" height="230">
 
-When you open this file with a well-configured text editor like the one mentioned above, when you place your cursor over each setting, you will see a brief description of what it does:
-
- <img src="https://github.com/enrique-lozano/Image-organizer/assets/61509169/894ce7fc-5177-40ab-a949-4e3df94702ea" alt="Settings descriptions" height="230">
-
-You will also have warnings and errors if you type something wrong.
+When you open this file with a well-configured text editor like the one mentioned above, when you place your cursor over each setting, you will see a brief description of what it does. You will also have warnings and errors if you type something wrong.
 
 Through this configuration file you can enable or disable which processes you want the program to carry out. For example, you may just want to organize your library without searching for duplicates or fixing metadata.
 
 Precisely the latter is one of the most customizable options, since it allows you to create your own folder and file structure. Thanks to the use of variables, you can group and name some photos, replacing the variable by info of the files. You can use the following variables to name your files/folders:
 
-| Placeholder                                                                                                                  | Where do we find this in the metadata (by order of precedence)                                      |     |     |     |     |     |     |     |     |
-| ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) | EXIF:DateTimeOriginal, XMP:DateTimeOriginal, QuickTime:CreateDate, EXIF:CreateDate, EXIF:ModifyDate |     |     |     |     |     |     |     |     |
-| Camera Make                                                                                                                  | EXIF:Make, QuickTime:Make                                                                           |     |     |     |     |     |     |     |     |
-| Camera Model                                                                                                                 | EXIF:Model, QuickTime:Model                                                                         |     |     |     |     |     |     |     |     |
+| Placeholder                                                                                                                  | Where do we find this in the metadata (by order of precedence)                                      |     
+| ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | 
+| Any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) | EXIF:DateTimeOriginal, XMP:DateTimeOriginal, QuickTime:CreateDate, EXIF:CreateDate, EXIF:ModifyDate |  
+| Camera Make                                                                                                                  | EXIF:Make, QuickTime:Make                                                                           |  
+| Camera Model                                                                                                                 | EXIF:Model, QuickTime:Model                                                                         |   
 | Software                                                                                                                     | EXIF: Software                                                                                      |
 
 So, the string `IMG_%y_%m` will create file/folder names like `IMG_2020_03`, `IMG_2021_11`...
