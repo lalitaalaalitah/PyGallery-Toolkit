@@ -10,6 +10,11 @@
       "type": "boolean",
       "description": "If true, all the content in the input directory will be copied to the output_path without any exception. If false, only photos and videos will be copied, apart of the files with a extension specified in the include_extra_formats param."
     },
+    "auto_clean_output": {
+      "type": "boolean",
+      "description": "If true, the program will auto-remove all the existing content in the output directory. When false, the program will ask the user before making any deletion.",
+      "default": false
+    },
     "include_extra_formats": {
       "type": "array",
       "items": {
@@ -83,15 +88,18 @@
           "type": "boolean"
         },
         "folder_structure": {
-          "description": "Folder tree in which your files will be organized based on their metadata. By default it is 'year>month', that is, first folders will be created with the years of the files, and within these, folders with the months. Within each month the corresponding files will be located. You can find more information about how to customize your organization in the github repo",
+          "description": "Folder tree in which your files will be organized based on their metadata. Each list element will be a level in the new folder structure",
           "items": {
-            "enum": ["month", "year"],
             "type": "string"
           },
           "type": "array"
+        },
+        "file_name_template": {
+          "description": "Names that will have the parsed files in the output directory. Leave it blank or null if you want the current file name to be maintained.\nBe careful when specifying this attribute, since a template that is too generic could lead to many duplicates. When this happens, file names are created by adding (1), (2)... to the current name",
+          "type": ["string", "null"]
         }
       },
-      "required": ["enabled", "folder_structure"],
+      "required": ["enabled", "folder_structure", "file_name_template"],
       "type": "object"
     },
     "input_path": {
@@ -107,6 +115,7 @@
   "required": [
     "extended_logger",
     "duplicates_search",
+    "auto_clean_output",
     "metadata_fixer",
     "file_organizer",
     "input_path",

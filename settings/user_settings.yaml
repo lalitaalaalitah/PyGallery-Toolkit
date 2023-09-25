@@ -2,6 +2,7 @@ input_path: 'input'
 output_path: 'output'
 recursive: true
 extended_logger: true
+auto_clean_output: false
 
 include_all_files: false
 include_extra_formats: ['.mp3', '.txt', '.json']
@@ -12,11 +13,12 @@ metadata_fixer:
   overwrite_datetime: false
 
 file_organizer:
-  enabled: false
-  folder_structure: ['year', 'month']
+  enabled: true
+  folder_structure: ['%Y', '%m - %B']
+  file_name_template: ''
 
 duplicates_search:
-  enabled: false
+  enabled: true
   hash_size: 16
   similarity: 96
   plot_before_confirm: true

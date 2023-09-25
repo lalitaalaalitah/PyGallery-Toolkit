@@ -1,5 +1,8 @@
 import os
+import shutil
 from shutil import copy2
+
+from rich.prompt import Confirm
 
 from src.constants.allowed_extensions import (
     IMG_EXTENSIONS,
@@ -12,7 +15,13 @@ from src.features.file_organizer.file_organizer import file_organizer
 from src.features.metadata_fixer.metadata_fixer import metadata_fixer
 from src.utils import rich_console
 from src.utils.remove_empty_folders import remove_empty_folders
-from src.utils.rich_console import console, print_error, print_separator, progress_bar
+from src.utils.rich_console import (
+    console,
+    print_error,
+    print_separator,
+    print_warn,
+    progress_bar,
+)
 
 
 def get_filepaths(path: str, recursive: bool):
@@ -71,10 +80,41 @@ def main(
         rich_console.console.print(
             "[blue bold][INFO]:[/blue bold] Output directory not found. A new one has been created"
         )
+
+    # Check if output directory has some content already
     elif len(os.listdir(path_full_destination)) > 0:
         rich_console.console.print(
             "[blue bold][INFO]:[/blue bold] The output directory has already some content. Some files may be overwritten"
         )
+
+        auto_clean_output = USER_SETTINGS.get("auto_clean_output")
+
+        confirm_remove = auto_clean_output or Confirm.ask(
+            f"\nYou have content in the specified output directory. To start and fill this directory, this script require the output directory to be clean. We can delete all the content in this directory now if you want. Continue?",
+            default=False,
+        )
+
+        if confirm_remove and auto_clean_output:
+            print_warn(
+                "You have some files/directories in the specified output directory. Any content here will be removed and replaced by the new data\n"
+            )
+
+        if not confirm_remove:
+            print_error(
+                "The program require the output directory to be clean",
+                "Remove all the content in the output directory or specify a new one and re-run the script.",
+            )
+
+        for filename in os.listdir(path_full_destination):
+            file_path = os.path.join(path_full_destination, filename)
+
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print("Failed to delete %s. Reason: %s" % (file_path, e))
 
     # Wheter the search is recursive in the input folder
     recursive: bool = USER_SETTINGS.get("recursive")  # type: ignore

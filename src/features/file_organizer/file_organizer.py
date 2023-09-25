@@ -1,112 +1,195 @@
+import json
 import os
+import re
+import shutil
 from datetime import datetime
-from shutil import SameFileError, copy2
+from typing import Any
 
-import piexif
+import exiftool
+from exiftool import ExifToolHelper
 
-from src.constants.new_filenames_utils import (
-    MONTH_NAMES,
-    UNKOWN_LITERAL,
-    VALID_NAME_KEYS,
-)
-from src.utils.rich_console import console, progress_bar
+from src.constants.user_settings import USER_SETTINGS
+from src.utils.rich_console import progress_bar
+
+python_date_directives = [
+    "a",
+    "A",
+    "w",
+    "d",
+    "b",
+    "B",
+    "m",
+    "y",
+    "Y",
+    "H",
+    "I",
+    "p",
+    "M",
+    "S",
+    "f",
+    "z",
+    "Z",
+    "j",
+    "U",
+    "W",
+    "x",
+    "x",
+    "X",
+]
+
+python_date_directives = ["%" + i for i in python_date_directives]
+
+custom_app_directives = ["software", "camera_maker", "camera_model"]
+custom_app_directives = ["%" + i for i in custom_app_directives]
 
 
-def get_datefile(filepath: str):
+def get_datefile(filepath: str, et: ExifToolHelper):
     try:
-        exif_dict = piexif.load(filepath)
+        metadata: dict[str, Any] = et.get_metadata(filepath)[0]
 
-        if exif_dict["Exif"].get(piexif.ExifIFD.DateTimeOriginal):
-            return datetime.strptime(
-                exif_dict["Exif"].get(piexif.ExifIFD.DateTimeOriginal).decode("utf-8"),
-                "%Y:%m:%d %H:%M:%S",
-            )
+        # print(json.dumps(str(metadata)))
 
-        else:
-            return min(
-                datetime.fromtimestamp(os.path.getctime(filepath)),
-                datetime.fromtimestamp(os.path.getmtime(filepath)),
-            )
+        keys = [
+            "EXIF:DateTimeOriginal",
+            "XMP:DateTimeOriginal",
+            "QuickTime:CreateDate",
+            "EXIF:CreateDate",
+            "EXIF:ModifyDate",
+        ]
 
-    except Exception:
+        for key in keys:
+            if metadata.get(key):
+                return datetime.strptime(
+                    str(metadata.get(key)),
+                    "%Y:%m:%d %H:%M:%S",
+                )
+
+    except:
         return min(
             datetime.fromtimestamp(os.path.getctime(filepath)),
             datetime.fromtimestamp(os.path.getmtime(filepath)),
         )
 
+    return min(
+        datetime.fromtimestamp(os.path.getctime(filepath)),
+        datetime.fromtimestamp(os.path.getmtime(filepath)),
+    )
 
-def get_folder_path(folder_structure: list[str], filedate: datetime):
-    if len(folder_structure) > 3:
-        raise RecursionError("The max depth for the folder structure is 3")
 
+def get_metadata_str(metadata: dict[str, Any], keys: list[str]):
+    for key in keys:
+        if metadata.get(key):
+            return str(metadata.get(key))
+
+    return "Unknown"
+
+
+def replace_attr_variables(part: str, filepath: str, et: ExifToolHelper):
+    custom_attr = re.findall("(%[a-zA-Z_]+)", part)
+
+    if set(custom_attr) <= set(python_date_directives):
+        filedate = get_datefile(filepath, et)
+        part = datetime.strftime(filedate, part)
+
+    else:
+        for directive in custom_attr:
+            if directive in python_date_directives:
+                filedate = get_datefile(filepath, et)
+
+                part = part.replace(directive, datetime.strftime(filedate, directive))
+
+            elif directive in custom_app_directives:
+                metadata: dict[str, Any] = et.get_metadata(filepath)[0]
+
+                if "software" in directive:
+                    part = part.replace(
+                        directive, get_metadata_str(metadata, ["EXIF:Software"])
+                    )
+
+                if "camera_maker" in directive:
+                    part = part.replace(
+                        directive,
+                        get_metadata_str(metadata, ["EXIF:Make", "QuickTime:Make"]),
+                    )
+
+                if "camera_model" in directive:
+                    part = part.replace(
+                        directive,
+                        get_metadata_str(metadata, ["EXIF:Model", "QuickTime:Model"]),
+                    )
+
+            else:
+                raise Exception(f"Custom directive not accepted: {directive}")
+
+    return part
+
+
+def get_folder_path(folder_structure: list[str], filepath: str, et: ExifToolHelper):
     to_return: list[str] = []
 
-    for key in folder_structure:
-        key = key.strip()
-        if key not in VALID_NAME_KEYS._value2member_map_:
-            raise NameError(
-                "The folder structure param that you have passed is not valid. To check the valid keys please visit the file constants/new_filenames_utils.py"
-            )
-
-        if key == VALID_NAME_KEYS.MONTH.value:
-            to_return.append(str(MONTH_NAMES[filedate.month - 1]))
-        elif key == VALID_NAME_KEYS.YEAR.value:
-            to_return.append(str(filedate.year))
+    for part in folder_structure:
+        to_return.append(replace_attr_variables(part, filepath, et))
 
     return to_return
 
 
 def get_file_location(
-    _folder_structure: list[str], output_path: str, filename: str, filedate: datetime
+    _folder_structure: list[str], output_path: str, filepath: str, et: ExifToolHelper
 ):
     path_destination: str = ""
 
-    folder_structure = get_folder_path(_folder_structure, filedate)
+    folder_structure = get_folder_path(_folder_structure, filepath, et)
 
-    if len(folder_structure) == 1:
-        path_destination = os.path.join(output_path, folder_structure[0])
-    elif len(folder_structure) == 2:
-        path_destination = os.path.join(
-            output_path, folder_structure[0], folder_structure[1]
-        )
-    elif len(folder_structure) == 3:
-        path_destination = os.path.join(
-            output_path, folder_structure[0], folder_structure[1], folder_structure[2]
-        )
+    path_destination = os.path.join(*([output_path] + folder_structure))
 
     if path_destination == "":
-        return UNKOWN_LITERAL
+        return "Unknown"
 
     if not os.path.exists(path_destination):
         os.makedirs(path_destination)
 
-    return os.path.join(path_destination, filename)
+    return path_destination
+
+
+def get_new_file_name(filepath: str, et: ExifToolHelper):
+    template: str | None = USER_SETTINGS.get("file_organizer").get("file_name_template")  # type: ignore
+
+    if template == "" or template is None:
+        return os.path.basename(filepath)
+
+    base, extension = os.path.splitext(filepath)
+
+    return f"{replace_attr_variables(template, filepath, et)}{extension}"
+
+
+def make_unique_filename(file_path):
+    duplicate_nr = 0
+    base, extension = os.path.splitext(file_path)
+
+    while os.path.exists(file_path):
+        duplicate_nr += 1
+        file_path = f"{base} ({duplicate_nr}){extension}"
+
+    return file_path
 
 
 def file_organizer(
     filepaths: list[tuple[str, str]], output_path: str, folder_structure: list[str]
 ):
-    with progress_bar() as p:
-        for path, filename in p.track(
-            filepaths, description="Organizing your library:"
-        ):
-            filepath = os.path.join(path, filename)
-            filedate = get_datefile(filepath)
+    with exiftool.ExifToolHelper() as et:
+        with progress_bar() as p:
+            for path, filename in p.track(
+                filepaths, description="Organizing your library:"
+            ):
+                filepath = os.path.join(path, filename)
 
-            new_file_location = get_file_location(
-                folder_structure, output_path, filename, filedate
-            )
-
-            if not new_file_location:
-                continue
-
-            try:
-                copy2(
-                    filepath,
-                    new_file_location,
+                new_file_location = os.path.join(
+                    get_file_location(folder_structure, output_path, filepath, et),
+                    get_new_file_name(filepath, et),
                 )
-            except SameFileError:
-                continue
 
-            if filepath != new_file_location:
-                os.remove(filepath)
+                new_file_location = os.path.abspath(new_file_location)
+
+                new_file_location = make_unique_filename(new_file_location)
+
+                shutil.move(filepath, new_file_location)

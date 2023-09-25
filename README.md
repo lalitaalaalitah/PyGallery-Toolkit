@@ -38,14 +38,18 @@ When you open this file with a well-configured text editor like the one mentione
 
 You will also have warnings and errors if you type something wrong.
 
-## Next updates 🔜
+Through this configuration file you can enable or disable which processes you want the program to carry out. For example, you may just want to organize your library without searching for duplicates or fixing metadata.
 
-- More keys to organize your folders
-- Improve application performance (especially in the search for duplicates)
+Precisely the latter is one of the most customizable options, since it allows you to create your own folder and file structure. Thanks to the use of variables, you can group and name some photos, replacing the variable by info of the files. You can use the following variables to name your files/folders:
 
-## Issues 🤕
+| Placeholder                                                                                                                  | Where do we find this in the metadata (by order of precedence)                                      |     |     |     |     |     |     |     |     |
+| ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) | EXIF:DateTimeOriginal, XMP:DateTimeOriginal, QuickTime:CreateDate, EXIF:CreateDate, EXIF:ModifyDate |     |     |     |     |     |     |     |     |
+| Camera Make                                                                                                                  | EXIF:Make, QuickTime:Make                                                                           |     |     |     |     |     |     |     |     |
+| Camera Model                                                                                                                 | EXIF:Model, QuickTime:Model                                                                         |     |     |     |     |     |     |     |     |
+| Software                                                                                                                     | EXIF: Software                                                                                      |
 
-- Creation date modification based on filename is not working correctly, making some files to not be organized correctly (<a href="https://github.com/enrique-lozano/Image-organizer/issues/1#issue-1437213445">more info</a>)
+So, the string `IMG_%y_%m` will create file/folder names like `IMG_2020_03`, `IMG_2021_11`...
 
 ## Want to collaborate? 🙋🏻
 

@@ -73,13 +73,13 @@ def metadata_fixer(
 
     results: list[FileStatus] = []
 
-    with progress_bar() as p:
-        for path, filename in p.track(filepaths, description="Fixing metadata:"):
-            filepath = os.path.join(path, filename)
+    with exiftool.ExifToolHelper() as et:
+        with progress_bar() as p:
+            for path, filename in p.track(filepaths, description="Fixing metadata:"):
+                filepath = os.path.join(path, filename)
 
-            file_status: FileStatus = "skipped"
+                file_status: FileStatus = "skipped"
 
-            with exiftool.ExifToolHelper() as et:
                 metadata: dict[str, Any] = et.get_metadata(filepath)[0]
 
                 # ------------------------------------------------- #
@@ -102,6 +102,7 @@ def metadata_fixer(
                     file_datetime: datetime | None = None
 
                     for datimegetter in fill_missing_datetime_info_from:
+                        # Get the filedate based on the user settings
                         if file_datetime is None:
                             file_datetime = get_filedate(
                                 datimegetter, filename, filepath
@@ -129,9 +130,9 @@ def metadata_fixer(
                         )
 
                 else:
-                    print_log(
+                    """print_log(
                         f"[orange1]\u2714[/orange1] File {filename} -> Skipped (dateTimeOriginal already in metadata)"
-                    )
+                    )"""
 
                 # ------------------------------------------------- #
                 # ---------------- GPS EXIF FIXER ----------------- #
@@ -172,7 +173,7 @@ def metadata_fixer(
 
                     file_status = "updated"
 
-            results.append(file_status)
+                results.append(file_status)
 
     console.print(
         "[green bold][OK]:[/green bold] All files have been successfully processed!\n"
