@@ -81,10 +81,15 @@ def metadata_fixer(
     fill_missing_datetime_info_from: list[Literal["filename"] | Literal["filedate"]],
 ):
     console.print(
-        f"[blue bold][INFO]:[/blue bold] Starting the datetime-fixer with the force mode {'enabled' if overwrite_datetime else 'disabled'}.\n"
+        f"[blue bold][INFO]:[/blue bold] Starting the metadata-fixer with the force mode {'enabled' if overwrite_datetime else 'disabled'}.\n"
     )
 
     results: list[FileStatus] = []
+
+    def log_error(title: str):
+        print_log(f"[red]\u2716[/red] {title}")
+
+        results.append("error")
 
     with exiftool.ExifToolHelper() as et:
         with progress_bar() as p:
@@ -93,7 +98,22 @@ def metadata_fixer(
 
                 file_status: FileStatus = "skipped"
 
-                metadata: dict[str, Any] = et.get_metadata(filepath)[0]
+                try:
+                    metadata: dict[str, Any] = et.get_metadata(filepath)[0]
+
+                except UnicodeEncodeError:
+                    log_error(
+                        f"File {filename} -> Error while trying to read the file metadata. [UnicodeEncodeError]"
+                    )
+
+                    continue
+
+                except:
+                    log_error(
+                        f"File {filename} -> Error while trying to read the file metadata"
+                    )
+
+                    continue
 
                 # ------------------------------------------------- #
                 # ------------- DATETIME EXIF FIXER --------------- #
@@ -139,12 +159,9 @@ def metadata_fixer(
                             file_status = "updated"
 
                         except:
-                            print_log(
-                                f"[red]\u2716[/red] File {filename} -> Error while trying to update the datetime"
+                            log_error(
+                                f"File {filename} -> Error while trying to update the datetime"
                             )
-
-                            file_status = "error"
-                            results.append(file_status)
                             continue
 
                     else:
@@ -198,13 +215,9 @@ def metadata_fixer(
                         file_status = "updated"
 
                     except:
-                        print_log(
-                            f"[red]\u2716[/red] File {filename} -> Error while trying to update the GPS data"
+                        log_error(
+                            f"File {filename} -> Error while trying to update the GPS data"
                         )
-
-                        file_status = "error"
-                        results.append(file_status)
-
                         continue
 
                 results.append(file_status)
