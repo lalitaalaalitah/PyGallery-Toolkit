@@ -9,6 +9,7 @@ import exiftool
 from exiftool import ExifToolHelper
 
 from src.constants.user_settings import USER_SETTINGS
+from src.utils.file_date_getters import get_date_from_exif, get_date_from_os
 from src.utils.rich_console import progress_bar
 
 python_date_directives = [
@@ -43,37 +44,17 @@ custom_app_directives = ["software", "camera_maker", "camera_model"]
 custom_app_directives = ["%" + i for i in custom_app_directives]
 
 
-def get_datefile(filepath: str, et: ExifToolHelper):
+def get_datefile_to_organize(filepath: str, et: ExifToolHelper):
     try:
-        metadata: dict[str, Any] = et.get_metadata(filepath)[0]
-
-        # print(json.dumps(str(metadata)))
-
-        keys = [
-            "EXIF:DateTimeOriginal",
-            "XMP:DateTimeOriginal",
-            "QuickTime:CreateDate",
-            "EXIF:CreateDate",
-            "EXIF:ModifyDate",
-        ]
-
-        for key in keys:
-            if metadata.get(key):
-                return datetime.strptime(
-                    str(metadata.get(key)),
-                    "%Y:%m:%d %H:%M:%S",
-                )
+        to_return = get_date_from_exif(filepath, et)
 
     except:
-        return min(
-            datetime.fromtimestamp(os.path.getctime(filepath)),
-            datetime.fromtimestamp(os.path.getmtime(filepath)),
-        )
+        return get_date_from_os(filepath)
 
-    return min(
-        datetime.fromtimestamp(os.path.getctime(filepath)),
-        datetime.fromtimestamp(os.path.getmtime(filepath)),
-    )
+    if not to_return:
+        to_return = get_date_from_os(filepath)
+
+    return to_return
 
 
 def get_metadata_str(metadata: dict[str, Any], keys: list[str]):
@@ -88,13 +69,13 @@ def replace_attr_variables(part: str, filepath: str, et: ExifToolHelper):
     custom_attr = re.findall("(%[a-zA-Z_]+)", part)
 
     if set(custom_attr) <= set(python_date_directives):
-        filedate = get_datefile(filepath, et)
+        filedate = get_datefile_to_organize(filepath, et)
         part = datetime.strftime(filedate, part)
 
     else:
         for directive in custom_attr:
             if directive in python_date_directives:
-                filedate = get_datefile(filepath, et)
+                filedate = get_datefile_to_organize(filepath, et)
 
                 part = part.replace(directive, datetime.strftime(filedate, directive))
 

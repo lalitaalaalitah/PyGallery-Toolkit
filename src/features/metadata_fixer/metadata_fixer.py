@@ -3,82 +3,26 @@ from datetime import datetime
 from typing import Any, Literal
 
 import exiftool
-import filedate
 from rich.table import Table
 
-from src.constants.datetaken_templates import (
-    FILENAME_DATE_MAX,
-    FILENAME_DATE_MIN,
-    FILENAMES,
-)
+from src.features.file_organizer.file_organizer import get_datefile_to_organize
+from src.utils.file_date_getters import get_date_from_exif, get_filedate
 from src.utils.rich_console import console, print_log, progress_bar
-
-
-def get_datetime_from_filename(filename: str):
-    """Get the datetime of the file based on its name.
-
-    Solution for managing the suffix thanks to: https://stackoverflow.com/questions/5045210/how-to-remove-unconverted-data-from-a-python-datetime-object
-    """
-
-    end_date: datetime | None = None
-
-    for date_format in FILENAMES:
-        try:
-            end_date = datetime.strptime(filename, date_format)
-            break
-        except ValueError as v:
-            ulr = len(v.args[0].partition("unconverted data remains: ")[2])
-            if ulr:
-                try:
-                    end_date = datetime.strptime(filename[:-ulr], date_format)
-                    break
-                except:
-                    continue
-            else:
-                continue
-
-    if end_date is not None and (
-        end_date.year < FILENAME_DATE_MIN or end_date.year > FILENAME_DATE_MAX
-    ):
-        return None
-
-    return end_date
 
 
 def get_exif_datestr(datetime: datetime):
     return datetime.strftime("%Y:%m:%d %H:%M:%S")
 
 
-def modify_filetime(new_time: datetime, filepath: str):
-    try:
-        date_str = new_time.strftime("%m/%d/%Y %H:%M:%S")
-        filedate.File(filepath).set(
-            created=date_str,
-        )
-        return True
-    except:
-        return False
-
-
 FileStatus = Literal["updated"] | Literal["skipped"] | Literal["error"]
-
-
-def get_filedate(
-    way: Literal["filename"] | Literal["filedate"], filename: str, filepath: str
-):
-    if way == "filename":
-        return get_datetime_from_filename(filename)
-
-    elif way == "filedate":
-        return datetime.fromtimestamp(
-            os.path.getctime(filepath) or os.path.getmtime(filepath)
-        )
 
 
 def metadata_fixer(
     filepaths: list[tuple[str, str]],
     overwrite_datetime: bool,
-    fill_missing_datetime_info_from: list[Literal["filename"] | Literal["filedate"]],
+    fill_missing_datetime_info_from: list[
+        Literal["filename"] | Literal["filedate"] | Literal["fileexif"]
+    ],
 ):
     console.print(
         f"[blue bold][INFO]:[/blue bold] Starting the metadata-fixer with the force mode {'enabled' if overwrite_datetime else 'disabled'}.\n"
@@ -137,9 +81,15 @@ def metadata_fixer(
                     for datimegetter in fill_missing_datetime_info_from:
                         # Get the filedate based on the user settings
                         if file_datetime is None:
-                            file_datetime = get_filedate(
-                                datimegetter, filename, filepath
-                            )
+                            try:
+                                file_datetime = get_filedate(
+                                    datimegetter, filename, filepath, et
+                                )
+                            except:
+                                log_error(
+                                    f"File {filename} -> Error while trying to getting the datetime of this item"
+                                )
+                                continue
 
                     if file_datetime:
                         try:
@@ -219,6 +169,29 @@ def metadata_fixer(
                             f"File {filename} -> Error while trying to update the GPS data"
                         )
                         continue
+
+                try:
+                    date_to_set = get_date_from_exif(filepath, et)
+
+                    et.set_tags(
+                        filepath,
+                        {
+                            "filemodifydate": date_to_set,
+                            "filecreatedate": date_to_set,
+                        },
+                        params=["-overwrite_original"],
+                    )
+
+                    print_log(
+                        f"[green]\u2714[/green] File {filename} -> File creation/modify date updated"
+                    )
+
+                    file_status = "updated"
+                except:
+                    log_error(
+                        f"File {filename} -> File date created/modify can not be set"
+                    )
+                    file_status = "error"
 
                 results.append(file_status)
 

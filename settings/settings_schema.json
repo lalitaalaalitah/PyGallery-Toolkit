@@ -63,19 +63,25 @@
           "description": "Indicates where to obtain the date of the file to assign it to its metadata.\nA list must be defined here in order of preference, that is, if for example we enter `['filename', 'filename']`, first the program will try to obtain the date from the name of the file, and if it does not succeed , the date of its creation will be used.\nLeaving the list empty will mean that the metadata related to the dates will not be modified at all for any file.",
           "items": {
             "type": "string",
-            "enum": ["filename", "filedate"]
+            "enum": ["filename", "filedate", "fileexif"]
           }
         },
         "overwrite_datetime": {
           "default": false,
           "description": "Force the write of a new datetime in the metadata of the file, based on the `fill_missing_datetime_info_from` attribute. If false, the script will only write the datetime info on the files that don't have this data yet",
           "type": "boolean"
+        },
+        "set_os_datetimes": {
+          "default": false,
+          "description": "Overwrite the current file create/modify date to match the metadata of the photo if possible",
+          "type": "boolean"
         }
       },
       "required": [
         "enabled",
         "overwrite_datetime",
-        "fill_missing_datetime_info_from"
+        "fill_missing_datetime_info_from",
+        "set_os_datetimes"
       ],
       "type": "object"
     },

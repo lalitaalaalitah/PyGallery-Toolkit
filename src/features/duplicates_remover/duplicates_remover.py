@@ -10,7 +10,7 @@ from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 
 from src.constants.user_settings import USER_SETTINGS
-from src.features.file_organizer.file_organizer import get_datefile
+from src.features.file_organizer.file_organizer import get_datefile_to_organize
 from src.utils.rich_console import console, print_log, print_warn, progress_bar
 
 plot_enabled = (USER_SETTINGS.get("duplicates_search").get("plot_before_confirm")) is True  # type: ignore
@@ -94,7 +94,7 @@ def find_file_to_keep(
         )
 
     if order_method == "date":
-        files.sort(key=lambda x: get_datefile(x), reverse=True)
+        files.sort(key=lambda x: get_datefile_to_organize(x), reverse=True)
 
     return files[0]
 
