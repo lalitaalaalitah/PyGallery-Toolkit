@@ -3,6 +3,7 @@ from math import ceil
 from typing import Literal
 
 import matplotlib.pyplot as plt
+from exiftool import ExifToolHelper
 from imagehash import ImageHash, average_hash
 from PIL import Image
 from rich.columns import Columns
@@ -10,7 +11,7 @@ from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 
 from src.constants.user_settings import USER_SETTINGS
-from src.features.file_organizer.file_organizer import get_datefile_to_organize
+from src.utils.file_date_getters import get_datefile_to_organize
 from src.utils.rich_console import console, print_log, print_warn, progress_bar
 
 plot_enabled = (USER_SETTINGS.get("duplicates_search").get("plot_before_confirm")) is True  # type: ignore
@@ -81,7 +82,9 @@ def plot_images(paths: list[str], fig_title: str = ""):
 
 
 def find_file_to_keep(
-    files: list[str], order_method: Literal["size"] | Literal["date"]
+    files: list[str],
+    order_method: Literal["size"] | Literal["date"],
+    et: ExifToolHelper,
 ):
     """Finds the file to keep in a list of duplicates/similar files"""
 
@@ -94,7 +97,9 @@ def find_file_to_keep(
         )
 
     if order_method == "date":
-        files.sort(key=lambda x: get_datefile_to_organize(x), reverse=True)
+        files.sort(
+            key=lambda x: get_datefile_to_organize(filepath=x, et=et), reverse=True
+        )
 
     return files[0]
 
@@ -217,16 +222,19 @@ def duplicates_remover(
     if action_selection == "1" or action_selection == "2":
         paths_to_remove: list[str] = []
 
-        for duplication_group_info in duplicates_imgs:
-            IMG_TO_REMOVE = find_file_to_keep(
-                duplication_group_info[0], "date" if action_selection == "2" else "size"
-            )
+        with ExifToolHelper() as et:
+            for duplication_group_info in duplicates_imgs:
+                IMG_TO_REMOVE = find_file_to_keep(
+                    duplication_group_info[0],
+                    "date" if action_selection == "2" else "size",
+                    et,
+                )
 
-            duplication_group_info[0].remove(IMG_TO_REMOVE)
+                duplication_group_info[0].remove(IMG_TO_REMOVE)
 
-            for img in duplication_group_info[0]:
-                if os.path.exists(img) and os.path.isfile(img):
-                    paths_to_remove.append(img)
+                for img in duplication_group_info[0]:
+                    if os.path.exists(img) and os.path.isfile(img):
+                        paths_to_remove.append(img)
 
         paths_to_remove = list(
             set(paths_to_remove)

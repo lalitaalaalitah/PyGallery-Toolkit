@@ -5,8 +5,12 @@ from typing import Any, Literal
 import exiftool
 from rich.table import Table
 
-from src.features.file_organizer.file_organizer import get_datefile_to_organize
-from src.utils.file_date_getters import get_date_from_exif, get_filedate
+from src.constants.user_settings import USER_SETTINGS
+from src.utils.file_date_getters import (
+    get_date_from_exif,
+    get_date_from_os,
+    get_filedate,
+)
 from src.utils.rich_console import console, print_log, progress_bar
 
 
@@ -174,28 +178,35 @@ def metadata_fixer(
                 # ---------------- OS DATES FIXER ----------------- #
                 # ------------------------------------------------- #
 
-                try:
-                    date_to_set = get_date_from_exif(filepath, et)
+                if USER_SETTINGS.get("metadata_fixer").get(  # type:ignore
+                    "set_os_datetimes"
+                ):
+                    try:
+                        date_to_set = get_date_from_exif(filepath, et)
 
-                    et.set_tags(
-                        filepath,
-                        {
-                            "filemodifydate": date_to_set,
-                            "filecreatedate": date_to_set,
-                        },
-                        params=["-overwrite_original"],
-                    )
+                        if (
+                            date_to_set is not None
+                            and get_date_from_os(filepath) != date_to_set
+                        ):
+                            et.set_tags(
+                                filepath,
+                                {
+                                    "filemodifydate": date_to_set,
+                                    "filecreatedate": date_to_set,
+                                },
+                                params=["-overwrite_original"],
+                            )
 
-                    print_log(
-                        f"[green]\u2714[/green] File {filename} -> File creation/modify date updated"
-                    )
+                            print_log(
+                                f"[green]\u2714[/green] File {filename} -> File creation/modify date updated"
+                            )
 
-                    file_status = "updated"
-                except:
-                    log_error(
-                        f"File {filename} -> File date created/modify can not be set"
-                    )
-                    file_status = "error"
+                            file_status = "updated"
+                    except:
+                        log_error(
+                            f"File {filename} -> File date created/modify can not be set"
+                        )
+                        file_status = "error"
 
                 results.append(file_status)
 

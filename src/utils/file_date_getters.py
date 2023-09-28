@@ -50,6 +50,8 @@ def get_date_from_os(filepath: str):
 
 
 def get_date_from_exif(filepath: str, et: ExifToolHelper):
+    """Get the datetime of the file based on its metadata."""
+
     metadata: dict[str, Any] = et.get_metadata(filepath)[0]
 
     # print(json.dumps(str(metadata)))
@@ -84,3 +86,18 @@ def get_filedate(
 
     else:
         return get_date_from_exif(filepath, et)
+
+
+def get_datefile_to_organize(filepath: str, et: ExifToolHelper):
+    """Get the datetime of the file based on its metadata. If we can not found the date in file metadata, the file OS date will be used"""
+
+    try:
+        to_return = get_date_from_exif(filepath, et)
+
+    except:
+        return get_date_from_os(filepath)
+
+    if not to_return:
+        to_return = get_date_from_os(filepath)
+
+    return to_return

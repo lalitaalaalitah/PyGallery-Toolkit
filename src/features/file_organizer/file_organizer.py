@@ -1,3 +1,4 @@
+import filecmp
 import json
 import os
 import re
@@ -9,7 +10,7 @@ import exiftool
 from exiftool import ExifToolHelper
 
 from src.constants.user_settings import USER_SETTINGS
-from src.utils.file_date_getters import get_date_from_exif, get_date_from_os
+from src.utils.file_date_getters import get_datefile_to_organize
 from src.utils.rich_console import progress_bar
 
 python_date_directives = [
@@ -42,19 +43,6 @@ python_date_directives = ["%" + i for i in python_date_directives]
 
 custom_app_directives = ["software", "camera_maker", "camera_model"]
 custom_app_directives = ["%" + i for i in custom_app_directives]
-
-
-def get_datefile_to_organize(filepath: str, et: ExifToolHelper):
-    try:
-        to_return = get_date_from_exif(filepath, et)
-
-    except:
-        return get_date_from_os(filepath)
-
-    if not to_return:
-        to_return = get_date_from_os(filepath)
-
-    return to_return
 
 
 def get_metadata_str(metadata: dict[str, Any], keys: list[str]):
@@ -143,15 +131,19 @@ def get_new_file_name(filepath: str, et: ExifToolHelper):
     return f"{replace_attr_variables(template, filepath, et)}{extension}"
 
 
-def make_unique_filename(file_path):
+def make_unique_filename(new_filepath: str, current_filepath: str):
     duplicate_nr = 0
-    base, extension = os.path.splitext(file_path)
+    base, extension = os.path.splitext(new_filepath)
 
-    while os.path.exists(file_path):
+    if new_filepath == current_filepath and filecmp.cmp(new_filepath, current_filepath):
+        # Same file in same dir -> No need to move
+        return None
+
+    while os.path.exists(new_filepath):
         duplicate_nr += 1
-        file_path = f"{base} ({duplicate_nr}){extension}"
+        new_filepath = f"{base} ({duplicate_nr}){extension}"
 
-    return file_path
+    return new_filepath
 
 
 def file_organizer(
@@ -170,7 +162,7 @@ def file_organizer(
                 )
 
                 new_file_location = os.path.abspath(new_file_location)
+                new_file_location = make_unique_filename(new_file_location, filepath)
 
-                new_file_location = make_unique_filename(new_file_location)
-
-                shutil.move(filepath, new_file_location)
+                if new_file_location is not None:
+                    shutil.move(filepath, new_file_location)
