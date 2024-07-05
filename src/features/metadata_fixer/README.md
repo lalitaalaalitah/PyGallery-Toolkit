@@ -63,7 +63,7 @@ python metadata_fixer.py "C:/users/your_user/images" --dates_from filename --ove
 Update date metadata based on the date of the filename and if fails, the creation/modification date of the file. Also, overwrite any existing date info in the metadata:
 
 ```
-python metadata_fixer.py "C:/users/your_user/images" --dates_from filedate filename --overwrite_dates
+python metadata_fixer.py "C:/users/your_user/images" --dates_from filename filedate --overwrite_dates
 ```
 
 ### Disable GPS Fix
