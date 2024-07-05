@@ -22,7 +22,7 @@ If the installation was successful, you are ready to start! To do it, you will h
 python script.py your_path_to_the_assets --arg1 --arg2 ...
 ```
 
-Here you will have to replace `script.py` for the script that you want. 
+Here you will have to replace `script.py` for the script that you want.
 
 ### Available Scripts
 
@@ -35,7 +35,10 @@ Organize your photos and videos into a structured folder hierarchy based on thei
 Identify and remove similar/duplicate images from your gallery to save space and avoid clutter. [See docs](https://link-url-here.org)
 
 #### - Metadata Fixer - `metadata_fixer.py`
+
 Fix the metadata of your images and videos to ensure consistency and accuracy accross different apps. Autocomplete missing dates in the metadata of your files. [See docs](https://link-url-here.org)
+
+---
 
 For more detailed usage instructions for each script, please refer to their respective docs linked above. There you will have all the details about how to configure each script and what options do you have. As a example, if you want to identify and remove similar images you could use the following command:
 

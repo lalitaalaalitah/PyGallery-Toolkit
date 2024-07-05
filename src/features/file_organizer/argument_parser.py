@@ -14,7 +14,7 @@ def parse_arguments():
         "-o",
         "--output_path",
         type=str,
-        help="Absolute path to save the proccessed images. If it is the same as the input_path the images will be overwritten in that same directory",
+        help="Absolute path to save the proccessed images. If not specified, the script will prompt you for the output path during execution. If it is the same as the input_path the images will be overwritten in that same directory",
     )
 
     parser.add_argument(
@@ -45,7 +45,7 @@ def parse_arguments():
         "--copy",
         action="store_true",
         default=False,
-        help="Copy files instead of moving",
+        help="Copy files instead of moving. Note that moving is generally faster than copying, specially with big files",
     )
 
     add_common_args(parser)
