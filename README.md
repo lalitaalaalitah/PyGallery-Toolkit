@@ -46,6 +46,8 @@ For more detailed usage instructions for each script, please refer to their resp
 python duplicates_remover.py "your_path" --hash_size 32
 ```
 
+Keep in mind that you can always use the command `python script.py --help` or `python script.py --h` to obtain a brief description of how to use each of the scripts and their respective options
+
 ## Want to collaborate? 🙋🏻
 
 Feel free to improve and optimize the existing code. To contribute to the project, read the previous points carefully and do the next steps with the project:

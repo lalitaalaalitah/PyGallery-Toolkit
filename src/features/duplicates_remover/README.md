@@ -32,7 +32,7 @@ python duplicates_remover.py input_path --arg1 --arg2 ...
 
 ## Important notes ⚠️
 
-- Make sure the `input_path` and the `output_path` are absolute paths.
+- Make sure the `input_path` is an absolute path.
 - Use caution when adjusting `hash_size` and `similarity` to balance accuracy and performance.
 
 ## Examples 🛠️

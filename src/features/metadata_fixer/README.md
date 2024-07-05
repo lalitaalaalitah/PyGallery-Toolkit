@@ -36,39 +36,64 @@ python metadata_fixer.py input_path --arg1 --arg2 ...
 
 ## Important notes ⚠️
 
-- Make sure the `input_path` and the `output_path` are absolute paths.
-- Use caution when adjusting `hash_size` and `similarity` to balance accuracy and performance.
+- Make sure the `input_path` is an absolute paths.
+- Use the `--overwrite_dates` flag cautiously, as it will overwrite existing date tags in your file metadata based on the specified sources.
+- Ensure that the files have appropriate permissions for modification.
 
 ## Examples 🛠️
 
 ### Basic Example
 
-Remove duplicate or similar images from the "C:/users/your_user/images" directory:
+Fix metadata in files from the "C:/users/your_user/images" directory:
 
 ```
-python duplicates_remover.py "C:/users/your_user/images"
+python metadata_fixer.py "C:/users/your_user/images"
 ```
 
-### Adjusting Hash Size and Similarity
+### Overwrite Dates from Filename
 
-Use a larger hash size and stricter similarity threshold:
-
-```
-python duplicates_remover.py "C:/users/your_user/images" --hash_size 32 --similarity 98
-```
-
-### Disable Image Display
-
-Remove duplicates without displaying images for confirmation:
+Update date metadata based on filenames, overwriting any existing date info in the metadata:
 
 ```
-python duplicates_remover.py "C:/users/your_user/images" --similarity 96 --plot_disabled
+python metadata_fixer.py "C:/users/your_user/images" --dates_from filename --overwrite_dates
+```
+
+### Specify from where we should get date info
+
+Update date metadata based on the date of the filename and if fails, the creation/modification date of the file. Also, overwrite any existing date info in the metadata:
+
+```
+python metadata_fixer.py "C:/users/your_user/images" --dates_from filedate filename --overwrite_dates
+```
+
+### Disable GPS Fix
+
+Process files without fixing the GPS coordinates:
+
+```
+python metadata_fixer.py "C:/users/your_user/images" --no-gps_fix
+```
+
+### Disable OS Dates Modification
+
+Process files without modifying file creation and modification times:
+
+```
+python metadata_fixer.py "C:/users/your_user/images" --no-os_dates
+```
+
+### Disable Recursive Processing
+
+Process only files in the input directory without recursion:
+
+```
+python metadata_fixer.py "C:/users/your_user/images" --no-recursive
 ```
 
 ### Verbose Output
 
-Use the `--verbose` fag anywhere to enable an output with more detailed logs:
+Enable verbose output to get detailed logs:
 
-```
-python duplicates_remover.py "C:/users/your_user/images" --similarity 96 --verbose
-```
+````
+```python metadata_fixer.py "C:/users/your_user/images" --verbose
+````
