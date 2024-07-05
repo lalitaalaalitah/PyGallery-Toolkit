@@ -1,4 +1,4 @@
-# PyGallery organizer 📂🖼️​​
+# PyGallery Toolkit 📂🖼️​​
 
 A set of tools to fix the metadata of your images and videos, find and remove similar images, and organize your folder structure to create a well-structured gallery. All this with simple scripts!
 
