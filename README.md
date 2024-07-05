@@ -28,15 +28,15 @@ Here you will have to replace `script.py` for the script that you want.
 
 #### - File Organizer - `file_organizer.py`
 
-Organize your photos and videos into a structured folder hierarchy based on their metadata and your preferences. [See docs](https://link-url-here.org)
+Organize your photos and videos into a structured folder hierarchy based on their metadata and your preferences. [See docs](https://github.com/enrique-lozano/PyGallery-Toolkit/blob/main/src/features/file_organizer/README.md)
 
 #### - Duplicates Remover - `duplicates_remover.py`
 
-Identify and remove similar/duplicate images from your gallery to save space and avoid clutter. [See docs](https://link-url-here.org)
+Identify and remove similar/duplicate images from your gallery to save space and avoid clutter. [See docs](https://github.com/enrique-lozano/PyGallery-Toolkit/blob/main/src/features/duplicates_remover/README.md)
 
 #### - Metadata Fixer - `metadata_fixer.py`
 
-Fix the metadata of your images and videos to ensure consistency and accuracy accross different apps. Autocomplete missing dates in the metadata of your files. [See docs](https://link-url-here.org)
+Fix the metadata of your images and videos to ensure consistency and accuracy accross different apps. Autocomplete missing dates in the metadata of your files. [See docs](https://github.com/enrique-lozano/PyGallery-Toolkit/blob/main/src/features/metadata_fixer/README.md)
 
 ---
 

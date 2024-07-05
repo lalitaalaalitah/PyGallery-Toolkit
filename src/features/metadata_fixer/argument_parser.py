@@ -16,7 +16,7 @@ def parse_arguments():
         nargs="*",
         type=List[str],
         default=["fileexif", "filename"],
-        help="From where we should obtain the dates to put in the metadata",
+        help="Sources to obtain the capture date of the asset, in order of preference. Options can include 'fileexif' (from file's EXIF data), 'filename' (from the filename) or 'filedate' (from the OS date of the file)",
     )
 
     parser.add_argument(

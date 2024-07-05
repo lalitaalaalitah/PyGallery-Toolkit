@@ -60,10 +60,10 @@ So, the string `IMG_%y_%m` will create file/folder names like `IMG_2020_03`, `IM
 
 ### Basic Example
 
-Organize images from the ./input directory into the ./output directory:
+Organize images from the "C:/users/your_user/images" directory into the ./output directory:
 
 ```
-python file_organizer.py ./input -o ./output
+python file_organizer.py "C:/users/your_user/images" -o ./output
 ```
 
 ### Custom Folder Structure
@@ -71,7 +71,7 @@ python file_organizer.py ./input -o ./output
 Organize images into a custom folder structure:
 
 ```
-python file_organizer.py ./input -o ./output --folder_structure "%Y/%m"
+python file_organizer.py "C:/users/your_user/images" -o ./output --folder_structure "%Y/%m"
 ```
 
 ### Copy Files Instead of Moving
@@ -79,7 +79,7 @@ python file_organizer.py ./input -o ./output --folder_structure "%Y/%m"
 Copy files to the output directory instead of moving:
 
 ```
-python file_organizer.py ./input -o ./output --copy
+python file_organizer.py "C:/users/your_user/images" -o ./output --copy
 ```
 
 ### Verbose Output
@@ -87,7 +87,7 @@ python file_organizer.py ./input -o ./output --copy
 Enable verbose output to get detailed logs:
 
 ```
-python file_organizer.py ./input -o ./output --verbose
+python file_organizer.py "C:/users/your_user/images" -o ./output --verbose
 ```
 
 ### Combine Multiple Parameters
@@ -95,5 +95,5 @@ python file_organizer.py ./input -o ./output --verbose
 Organize images, use a custom folder structure, copy files, enable verbose output and not parse subdirectories in the input_path:
 
 ```
-python file_organizer.py ./input -o ./output --folder_structure "%Y/%m" --copy --verbose --no-recursive
+python file_organizer.py "C:/users/your_user/images" -o ./output --folder_structure "%Y/%m" --copy --verbose --no-recursive
 ```
