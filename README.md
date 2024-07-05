@@ -1,6 +1,6 @@
 # PyGallery organizer 📂🖼️​​
 
-Fix the metadata of your images and videos, find similar or duplicate images and organize your folder structure to create a well-organized gallery. All this in a simple script!
+A set of tools to fix the metadata of your images and videos, find and remove similar images, and organize your folder structure to create a well-structured gallery. All this with simple scripts!
 
 ## Download/Installation steps 🚀
 
@@ -16,36 +16,32 @@ pip install -r requirements.txt
 
 ## Usage example 💡
 
-If the installation was successful, you are ready to start! To do it, paste some images into a new directory inside the project. By default, the input directory where you should paste the images should be called `input` but you can change it whatever you want in the user settings (see below).
-
-So, for example, to start, create a folder called <code>input</code> in the root directory of the cloned project, and paste some files in .jpg / .jpeg. Then enter the following command:
+If the installation was successful, you are ready to start! To do it, you will have to run the functionality that you want in the following way:
 
 ```
-python main.py
+python script.py your_path_to_the_assets --arg1 --arg2 ...
 ```
 
-If everything went well, you will see that a new folder has been created in the root folder of the project (by default called <code>output</code>). If you enter in this folder, you will see that your photos are organized in subfolders by year and month.
+Here you will have to replace `script.py` for the script that you want. 
 
-### Settings & Customization ⚙️
+### Available Scripts
 
-Fantastic, right? But this is not all, many configuration options are also provided. You can consult your script settings by going to `settings > user_settings.yaml`. To modify this file is recommended to open it with an text editor such as VSCode (download [here](https://code.visualstudio.com/)) with the YAML extension installed:
+#### - File Organizer - `file_organizer.py`
 
- <img src="https://user-images.githubusercontent.com/9625760/82730428-7b6fc880-9cf7-11ea-9d81-abee45435a3f.png" alt="YAML extension in VSCode" height="230">
+Organize your photos and videos into a structured folder hierarchy based on their metadata and your preferences. [See docs](https://link-url-here.org)
 
-When you open this file with a well-configured text editor like the one mentioned above, when you place your cursor over each setting, you will see a brief description of what it does. You will also have warnings and errors if you type something wrong.
+#### - Duplicates Remover - `duplicates_remover.py`
 
-Through this configuration file you can enable or disable which processes you want the program to carry out. For example, you may just want to organize your library without searching for duplicates or fixing metadata.
+Identify and remove similar/duplicate images from your gallery to save space and avoid clutter. [See docs](https://link-url-here.org)
 
-Precisely the latter is one of the most customizable options, since it allows you to create your own folder and file structure. Thanks to the use of variables, you can group and name some photos, replacing the variable by info of the files. You can use the following variables to name your files/folders:
+#### - Metadata Fixer - `metadata_fixer.py`
+Fix the metadata of your images and videos to ensure consistency and accuracy accross different apps. Autocomplete missing dates in the metadata of your files. [See docs](https://link-url-here.org)
 
-| Placeholder                                                                                                                  | Where do we find this in the metadata (by order of precedence)                                      |     
-| ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | 
-| Any of [the standard Python time directives](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) | EXIF:DateTimeOriginal, XMP:DateTimeOriginal, QuickTime:CreateDate, EXIF:CreateDate, EXIF:ModifyDate |  
-| Camera Make                                                                                                                  | EXIF:Make, QuickTime:Make                                                                           |  
-| Camera Model                                                                                                                 | EXIF:Model, QuickTime:Model                                                                         |   
-| Software                                                                                                                     | EXIF: Software                                                                                      |
+For more detailed usage instructions for each script, please refer to their respective docs linked above. There you will have all the details about how to configure each script and what options do you have. As a example, if you want to identify and remove similar images you could use the following command:
 
-So, the string `IMG_%y_%m` will create file/folder names like `IMG_2020_03`, `IMG_2021_11`...
+```
+python duplicates_remover.py "your_path" --hash_size 32
+```
 
 ## Want to collaborate? 🙋🏻
 
