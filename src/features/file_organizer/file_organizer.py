@@ -27,49 +27,88 @@ from src.utils.rich_console import (
 
 
 def get_metadata_str(metadata: dict[str, Any], keys: list[str]):
+    """_summary_
+
+    Args:
+        metadata (dict[str, Any]): A dictionary of either strings or other type of data.
+        keys (list[str]): A list of possible keys.
+
+    Returns:
+        _type_: Return a string which is formed by converting the value for first possible key present in the metadata.
+    """
     for key in keys:
         if metadata.get(key):
             return str(metadata.get(key))
 
-    return "Unknown"
+    return None
 
 
 def replace_attr_variables(part: str, filepath: str, et: ExifToolHelper):
+    """_summary_
+
+    Args:
+        part (str): A string containing placeholder variables like %Y or %camera_model, which may represent file attributes or date information. It is basically what we provide as file naming template.
+        filepath (str): Image file path.
+        et (ExifToolHelper): Tool to extract exif data.
+
+    Raises:
+        Exception: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    # Find %Y or %m or %camera_maker or %camera_model, etc. or all in the part string, i.e. inside file name template provided by us.
     custom_attr = re.findall("(%[a-zA-Z_]+)", part)
 
+    # If file name template is only date time, then replace variables with formatted date time of the file.
     if set(custom_attr) <= set(python_date_directives):
         filedate = get_datefile_to_organize(filepath, et)
         part = datetime.strftime(filedate, part)
 
+    # If template was made with date time and camera model, camera maker, etc., then find each variable and replace it with correct value.
     else:
+        # custom_attr is the list of strings which comprise template.
+        # directive is each variable which is accepted as  a part of file name template and starts with %.
         for directive in custom_attr:
+            # If the variable is date time, then replace it with date time value for the file.
             if directive in python_date_directives:
                 filedate = get_datefile_to_organize(filepath, et)
 
                 part = part.replace(directive, datetime.strftime(filedate, directive))
-
+            # Since the file name was made up of camera_maker, camera_model, etc. So, get metadata and then get their value and replace variable with them.
             elif directive in custom_app_directives:
                 metadata: dict[str, Any] = et.get_metadata(filepath)[0]
 
                 if "software" in directive:
-                    part = part.replace(
-                        directive, get_metadata_str(metadata, ["EXIF:Software"])
-                    )
+                    software_name = get_metadata_str(metadata, ["EXIF:Software"])
+                    if software_name:
+                        part = part.replace(directive, software_name)
+                    else:
+                        part = "DO_NOT_MOVE"
 
                 if "camera_maker" in directive:
-                    part = part.replace(
-                        directive,
-                        get_metadata_str(metadata, ["EXIF:Make", "QuickTime:Make"]),
-                    )
+                    camera_maker_name = get_metadata_str(metadata, ["EXIF:Make", "QuickTime:Make"])
+                    if camera_maker_name:
+                        part = part.replace(
+                            directive,
+                            camera_maker_name
+                        )
+                    else:
+                        part = "DO_NOT_MOVE"
 
                 if "camera_model" in directive:
-                    part = part.replace(
-                        directive,
-                        get_metadata_str(metadata, ["EXIF:Model", "QuickTime:Model"]),
-                    )
+                    camera_model_name = get_metadata_str(metadata, ["EXIF:Model", "QuickTime:Model"])
+                    if camera_model_name:
+                        part = part.replace(
+                            directive,
+                            camera_model_name
+                        )
+                    else:
+                        part = "DO_NOT_MOVE"
+
 
             else:
-                raise Exception(f"Custom directive not accepted: {directive}")
+                part = "DO_NOT_MOVE"
 
     return part
 
@@ -89,9 +128,11 @@ def get_file_location(
     path_destination: str = ""
 
     folder_structure = get_folder_path(_folder_structure, filepath, et)
-
-    path_destination = os.path.join(*([output_path] + folder_structure))
-
+    if not "DO_NOT_MOVE" in folder_structure:
+        path_destination = os.path.join(*([output_path] + folder_structure))
+    else:
+        return "Unknown"
+    #
     if path_destination == "":
         return "Unknown"
 
@@ -123,7 +164,7 @@ def make_unique_filename(new_filepath: str, current_filepath: str):
 
     while os.path.exists(new_filepath):
         duplicate_nr += 1
-        new_filepath = f"{base} ({duplicate_nr}){extension}"
+        new_filepath = f"{base}_({duplicate_nr}){extension}"
 
     return new_filepath
 
@@ -210,6 +251,8 @@ def main(
         )
         return
 
+    files_moved = 0
+    files_not_moved = 0
     with exiftool.ExifToolHelper() as et:
         with progress_bar() as p:
             for path, filename in p.track(
@@ -217,31 +260,43 @@ def main(
             ):
                 filepath = os.path.join(path, filename)
 
-                new_file_location = os.path.join(
-                    get_file_location(
-                        folder_structure.split("/"), output_path, filepath, et
-                    ),
-                    get_new_file_name(filepath, et),
+                print(f'filepath\t:\t{filepath}')
+
+                file_location = get_file_location(
+                    folder_structure.split("/"), output_path, filepath, et
                 )
 
-                new_file_location = os.path.abspath(new_file_location)
-                new_file_location = make_unique_filename(new_file_location, filepath)
-
-                if new_file_location is not None:
-                    paths_to_log = (
-                        os.path.relpath(filepath, input_path),
-                        os.path.relpath(new_file_location, output_path),
+                if file_location != "Unknown":
+                    new_file_location = os.path.join(
+                        file_location,
+                        get_new_file_name(filepath, et),
                     )
 
-                    if copy_mode:
-                        shutil.copy2(filepath, new_file_location)
-                        print_log(
-                            f"✅ File {paths_to_log[0]} copied to {paths_to_log[1]}",
-                            verbose,
+                    new_file_location = os.path.abspath(new_file_location)
+                    new_file_location = make_unique_filename(new_file_location, filepath)
+
+                    if new_file_location is not None:
+                        paths_to_log = (
+                            os.path.relpath(filepath, input_path),
+                            os.path.relpath(new_file_location, output_path),
                         )
-                    else:
-                        shutil.move(filepath, new_file_location)
-                        print_log(
-                            f"✅ File {paths_to_log[0]} moved to {paths_to_log[1]}",
-                            verbose,
-                        )
+
+                        if copy_mode:
+                            shutil.copy2(filepath, new_file_location)
+                            print_log(
+                                f"✅ File {paths_to_log[0]} copied to {paths_to_log[1]}",
+                                verbose,
+                            )
+                            files_moved += 1
+                        else:
+                            shutil.move(filepath, new_file_location)
+                            print_log(
+                                f"✅ File {paths_to_log[0]} moved to {paths_to_log[1]}",
+                                verbose,
+                            )
+                            files_moved += 1
+                else:
+                    print(f'NOT MOVING\t:\t{filepath}')
+                    files_not_moved += 1
+    print(f'files move = {files_moved}')
+    print(f'files not move = {files_not_moved}')

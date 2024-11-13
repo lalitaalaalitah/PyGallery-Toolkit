@@ -15,6 +15,29 @@ def get_filepaths(path: str, recursive: bool):
                                to the directory and the file name.
     """
 
+    image_extensions = (
+        ".jpg",
+        ".jpeg",
+        ".png",
+        # ".gif",
+        ".bmp",
+        ".tiff",
+        ".tif",
+        ".orf",
+        ".sr2",
+        ".svg",
+        ".ico",
+        ".jfif",
+        ".webp",
+        ".heic",
+        ".heif",
+        ".raw",
+        ".arw",
+        ".cr2",
+        ".nef",
+    )
+
+
     all_filepaths: list[tuple[str, str]] = []
 
     if not recursive:
@@ -25,7 +48,7 @@ def get_filepaths(path: str, recursive: bool):
     else:
         for dirpath, dirnames, filenames in os.walk(path):
             abspath = os.path.abspath(dirpath)
-            all_filepaths += [(abspath, f) for f in filenames]
+            all_filepaths += [(abspath, f) for f in filenames if f.endswith(image_extensions)]
 
     return all_filepaths
 
@@ -49,7 +72,7 @@ def filter_filepaths(filepaths: list[tuple[str, str]], allowed_ext: set[str]):
     ]
 
 
-""" 
+"""
 def main(
     input_path: str,
     output_path: str,
