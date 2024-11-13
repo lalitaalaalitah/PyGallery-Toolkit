@@ -48,7 +48,7 @@ def get_filepaths(path: str, recursive: bool):
     else:
         for dirpath, dirnames, filenames in os.walk(path):
             abspath = os.path.abspath(dirpath)
-            all_filepaths += [(abspath, f) for f in filenames if f.endswith(image_extensions)]
+            all_filepaths += [(abspath, f) for f in filenames if f.endswith(image_extensions) if not os.path.islink(os.path.join(abspath, f))]
 
     return all_filepaths
 
