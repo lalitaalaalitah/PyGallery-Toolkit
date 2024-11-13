@@ -102,7 +102,8 @@ def get_file_location(
 
 
 def get_new_file_name(filepath: str, et: ExifToolHelper):
-    template: str | None = USER_SETTINGS.get("file_organizer").get("file_name_template")  # type: ignore
+    # template: str | None = USER_SETTINGS.get("file_organizer").get("file_name_template")  # type: ignore
+    template: str | None = ""
 
     if template == "" or template is None:
         return os.path.basename(filepath)
